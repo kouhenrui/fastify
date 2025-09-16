@@ -1,0 +1,117 @@
+{
+  "compilerOptions": {
+    // 编译目标版本 - 生成 ES2022 代码
+    "target": "ES2022",
+    
+    // 模块系统 - 使用 ESNext 支持最新的 ES modules
+    "module": "ESNext",
+    
+    // 模块解析策略 - 使用 Node.js 的模块解析算法
+    "moduleResolution": "Node",
+    
+    // 允许从没有默认导出的模块中默认导入
+    "allowSyntheticDefaultImports": true,
+    
+    // 启用 ES modules 和 CommonJS 之间的互操作性
+    "esModuleInterop": true,
+    
+    // 允许编译 JavaScript 文件
+    "allowJs": true,
+    
+    // 编译输出目录
+    "outDir": "./dist",
+    
+    // 编译根目录
+    "rootDir": "./",
+    
+    // 启用所有严格类型检查选项
+    "strict": true,
+    
+    // 禁止隐式 any 类型
+    "noImplicitAny": true,
+    
+    // 启用严格的 null 检查
+    "strictNullChecks": true,
+    
+    // 启用严格的函数类型检查
+    "strictFunctionTypes": true,
+    
+    // 检查函数的所有代码路径都有返回值
+    "noImplicitReturns": true,
+    
+    // 检查 switch 语句的 fallthrough 情况
+    "noFallthroughCasesInSwitch": true,
+    
+    // 索引访问时进行未定义检查
+    "noUncheckedIndexedAccess": true,
+    
+    // 重写成员时必须显式使用 override 关键字
+    "noImplicitOverride": true,
+    
+    // 可选属性类型必须精确匹配
+    "exactOptionalPropertyTypes": true,
+    
+    // 跳过声明文件的类型检查（提升编译速度）
+    "skipLibCheck": true,
+    
+    // 强制文件名大小写一致
+    "forceConsistentCasingInFileNames": true,
+    
+    // 生成声明文件 (.d.ts)
+    "declaration": true,
+    
+    // 生成声明文件的 source map
+    "declarationMap": true,
+    
+    // 生成 source map 文件便于调试
+    "sourceMap": true,
+    
+    // 保留注释
+    "removeComments": false,
+    
+    // 使用 tslib 中的辅助函数减少代码体积
+    "importHelpers": true,
+    
+    // 启用装饰器支持（实验性）
+    "experimentalDecorators": true,
+    
+    // 为装饰器生成元数据
+    "emitDecoratorMetadata": true,
+    
+    // 允许导入 JSON 模块
+    "resolveJsonModule": true,
+    
+    // 确保每个文件都可以独立编译
+    "isolatedModules": true,
+    
+    // 不强制使用 verbatim 模块语法
+    "verbatimModuleSyntax": false,
+    
+    // 包含的类型定义
+    "types": ["node", "jest"]
+  },
+  
+  // 包含的文件模式
+  "include": [
+    "**/*.ts",  // 所有 TypeScript 文件
+    "**/*.js"   // 所有 JavaScript 文件
+  ],
+  
+  // 排除的文件模式
+  "exclude": [
+    "node_modules",      // 依赖包
+    "dist",              // 编译输出目录
+    "**/*.test.ts",      // 测试文件
+    "**/*.spec.ts"       // 测试规范文件
+  ],
+  
+  // ts-node 配置
+  "ts-node": {
+    "esm": true,                                    // 启用 ES modules 支持
+    "experimentalSpecifierResolution": "node",      // 使用 Node.js 的模块解析
+    "compilerOptions": {
+      "module": "ESNext",
+      "moduleResolution": "Node"
+    }
+  }
+}
