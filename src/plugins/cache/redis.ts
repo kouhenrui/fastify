@@ -1,7 +1,7 @@
-import { FastifyPluginAsync } from "fastify";
-import Redis, { RedisOptions } from "ioredis";
-import { logger } from "../../config/logger.js";
-import fp from "fastify-plugin";
+import { FastifyPluginAsync } from 'fastify';
+import Redis, { RedisOptions } from 'ioredis';
+import { logger } from '../../config/logger.js';
+import fp from 'fastify-plugin';
 // Redis 连接选项接口
 interface RedisPluginOptions {
   host: string;
@@ -23,7 +23,7 @@ const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (
     password,
     username,
     db = 0,
-    options: redisOptions = {},
+    options: redisOptions = {}
   } = options;
 
   // 默认连接选项
@@ -38,7 +38,7 @@ const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (
     keepAlive: 30000,
     connectTimeout: 10000,
     commandTimeout: 5000,
-    ...redisOptions,
+    ...redisOptions
   };
 
   // 创建 Redis 客户端
@@ -49,38 +49,38 @@ const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (
     await redis.connect();
 
     // 监听连接事件
-    redis.on("connect", () => {
-      logger.info("Redis 已连接");
+    redis.on('connect', () => {
+      logger.info('Redis 已连接');
     });
 
-    redis.on("ready", () => {
-      logger.info("Redis 已就绪");
+    redis.on('ready', () => {
+      logger.info('Redis 已就绪');
     });
 
-    redis.on("error", (error) => {
-      logger.error("Redis 连接错误", { error: error.message });
+    redis.on('error', (error) => {
+      logger.error('Redis 连接错误', { error: error.message });
     });
 
-    redis.on("close", () => {
-      logger.warn("Redis 连接关闭");
+    redis.on('close', () => {
+      logger.warn('Redis 连接关闭');
     });
 
-    redis.on("reconnecting", () => {
-      logger.info("Redis 重新连接中...");
+    redis.on('reconnecting', () => {
+      logger.info('Redis 重新连接中...');
     });
 
 
     // 优雅关闭
-    fastify.addHook("onClose", async () => {
+    fastify.addHook('onClose', async () => {
       await redis.quit();
-      logger.info("Redis 连接已关闭");
+      logger.info('Redis 连接已关闭');
     });
 
     // 将 Redis 实例添加到 fastify 实例
-    fastify.decorate("redis", redis);
+    fastify.decorate('redis', redis);
 
     // 添加 Redis 工具方法
-    fastify.decorate("cache", {
+    fastify.decorate('cache', {
       /**
        * 设置键值对
        * @param key 键名
@@ -238,21 +238,21 @@ const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (
        */
       hexists: async (key: string, field: string) => {
         return await redis.hexists(key, field);
-      },
+      }
     });
   } catch (error) {
-    logger.error("Redis 连接失败", {
-      error: error instanceof Error ? error.message : "Unknown error",
+    logger.error('Redis 连接失败', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       host,
       port,
-      db,
+      db
     });
     throw error;
   }
 };
 
 // 类型声明
-declare module "fastify" {
+declare module 'fastify' {
   interface FastifyInstance {
     redis: Redis;
     cache: {
@@ -274,5 +274,5 @@ declare module "fastify" {
 }
 
 export default fp(redisPlugin, {
-  name: "redis",
+  name: 'redis'
 });

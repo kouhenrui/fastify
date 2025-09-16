@@ -5,7 +5,7 @@ export interface SuccessResponse<T = any> {
   code: number;
   message: string;
   data: T;
-  timestamp: string;
+  timestamp: number;
   requestId?: string;
 }
 
@@ -15,7 +15,7 @@ export interface ErrorResponse {
   message: string;
   error: string;
   details?: any;
-  timestamp: string;
+  timestamp: number;
   requestId?: string;
 }
 
@@ -34,7 +34,7 @@ export interface PaginatedResponse<T = any> {
       hasPrev: boolean;
     };
   };
-  timestamp: string;
+  timestamp: number;
   requestId?: string;
 }
 
@@ -46,7 +46,7 @@ export interface ListResponse<T = any> {
     items: T[];
     count: number;
   };
-  timestamp: string;
+  timestamp: number;
   requestId?: string;
 }
 

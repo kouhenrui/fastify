@@ -1,9 +1,9 @@
-import { logger, Logger } from '../../config/logger';
+import { Logger, logger } from '../../config/logger';
 
 // 请求日志中间件
 export const requestLogger = (req: any, res: any, next: any) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logData = {
@@ -12,16 +12,16 @@ export const requestLogger = (req: any, res: any, next: any) => {
       statusCode: res.statusCode,
       duration: `${duration}ms`,
       userAgent: req.get('User-Agent'),
-      ip: req.ip || req.connection.remoteAddress,
+      ip: req.ip || req.connection.remoteAddress
     };
-    
+
     if (res.statusCode >= 400) {
       logger.warn('HTTP Request', logData);
     } else {
       logger.http('HTTP Request', logData);
     }
   });
-  
+
   next();
 };
 
@@ -31,7 +31,7 @@ export const logError = (error: Error, context?: any) => {
     message: error.message,
     stack: error.stack,
     context,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 };
 
@@ -41,7 +41,7 @@ export const logDatabaseOperation = (operation: string, collection: string, data
     operation,
     collection,
     data: data ? JSON.stringify(data) : undefined,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 };
 
@@ -52,7 +52,7 @@ export const logPerformance = (operation: string, duration: number, metadata?: a
     operation,
     duration: `${duration}ms`,
     metadata,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 };
 
@@ -62,7 +62,7 @@ export const logBusiness = (action: string, userId?: string, data?: any) => {
     action,
     userId,
     data,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 };
 
@@ -71,23 +71,23 @@ export const logSecurity = (event: string, details: any) => {
   logger.warn('Security Event', {
     event,
     details,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   });
 };
 
 // 创建带上下文的日志器
 export const createContextLogger = (context: string): Logger => {
   return {
-    error: (message: string, meta?: any) => 
+    error: (message: string, meta?: any) =>
       logger.error(`[${context}] ${message}`, meta),
-    warn: (message: string, meta?: any) => 
+    warn: (message: string, meta?: any) =>
       logger.warn(`[${context}] ${message}`, meta),
-    info: (message: string, meta?: any) => 
+    info: (message: string, meta?: any) =>
       logger.info(`[${context}] ${message}`, meta),
-    http: (message: string, meta?: any) => 
+    http: (message: string, meta?: any) =>
       logger.http(`[${context}] ${message}`, meta),
-    debug: (message: string, meta?: any) => 
-      logger.debug(`[${context}] ${message}`, meta),
+    debug: (message: string, meta?: any) =>
+      logger.debug(`[${context}] ${message}`, meta)
   };
 };
 

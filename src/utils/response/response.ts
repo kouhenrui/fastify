@@ -1,13 +1,13 @@
-import { FastifyReply } from "fastify";
+import { FastifyReply } from 'fastify';
 import {
-  SuccessResponse,
   ErrorResponse,
-  PaginatedResponse,
-  ListResponse,
   HttpStatus,
+  ListResponse,
+  PaginatedResponse,
   PaginationParams,
   PaginationQuery,
-} from "../types/response";
+  SuccessResponse
+} from '../types/response';
 
 // 生成请求 ID
 function generateRequestId(): string {
@@ -20,7 +20,7 @@ export class ResponseHelper {
   static success<T>(
     reply: FastifyReply,
     data: T,
-    message: string = "操作成功",
+    message: string = '操作成功',
     code: number = HttpStatus.OK,
     requestId?: string
   ): void {
@@ -28,8 +28,8 @@ export class ResponseHelper {
       code,
       message,
       data,
-      timestamp: new Date().toISOString(),
-      requestId: requestId || generateRequestId(),
+      timestamp: new Date().getTime(),
+      requestId: requestId || generateRequestId()
     };
 
     reply.code(code).send(response);
@@ -39,7 +39,7 @@ export class ResponseHelper {
   static created<T>(
     reply: FastifyReply,
     data: T,
-    message: string = "创建成功",
+    message: string = '创建成功',
     requestId?: string
   ): void {
     this.success(reply, data, message, HttpStatus.CREATED, requestId);
@@ -48,15 +48,15 @@ export class ResponseHelper {
   // 无内容响应
   static noContent(
     reply: FastifyReply,
-    message: string = "操作成功",
+    message: string = '操作成功',
     requestId?: string
   ): void {
     const response: SuccessResponse<null> = {
       code: HttpStatus.NO_CONTENT,
       message,
       data: null,
-      timestamp: new Date().toISOString(),
-      requestId: requestId || generateRequestId(),
+      timestamp: new Date().getTime(),
+      requestId: requestId || generateRequestId()
     };
 
     reply.code(HttpStatus.NO_CONTENT).send(response);
@@ -66,7 +66,7 @@ export class ResponseHelper {
   static list<T>(
     reply: FastifyReply,
     items: T[],
-    message: string = "获取列表成功",
+    message: string = '获取列表成功',
     requestId?: string
   ): void {
     const response: ListResponse<T> = {
@@ -74,10 +74,10 @@ export class ResponseHelper {
       message,
       data: {
         items,
-        count: items.length,
+        count: items.length
       },
-      timestamp: new Date().toISOString(),
-      requestId: requestId || generateRequestId(),
+      timestamp: new Date().getTime(),
+      requestId: requestId || generateRequestId()
     };
 
     reply.code(HttpStatus.OK).send(response);
@@ -90,7 +90,7 @@ export class ResponseHelper {
     total: number,
     page: number,
     limit: number,
-    message: string = "获取分页数据成功",
+    message: string = '获取分页数据成功',
     requestId?: string
   ): void {
     const totalPages = Math.ceil(total / limit);
@@ -106,11 +106,11 @@ export class ResponseHelper {
           total,
           totalPages,
           hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+          hasPrev: page > 1
+        }
       },
-      timestamp: new Date().toISOString(),
-      requestId: requestId || generateRequestId(),
+      timestamp: new Date().getTime(),
+      requestId: requestId || generateRequestId()
     };
 
     reply.code(HttpStatus.OK).send(response);
@@ -130,8 +130,8 @@ export class ResponseHelper {
       message,
       error,
       details,
-      timestamp: new Date().toISOString(),
-      requestId: requestId || generateRequestId(),
+      timestamp: new Date().getTime(),
+      requestId: requestId || generateRequestId()
     };
 
     reply.code(HttpStatus.OK).send(response);
@@ -140,14 +140,14 @@ export class ResponseHelper {
   // 验证错误响应
   static validationError(
     reply: FastifyReply,
-    message: string = "请求参数验证失败",
+    message: string = '请求参数验证失败',
     details?: any,
     requestId?: string
   ): void {
     this.error(
       reply,
       message,
-      "VALIDATION_ERROR",
+      'VALIDATION_ERROR',
       HttpStatus.BAD_REQUEST,
       details,
       requestId
@@ -157,13 +157,13 @@ export class ResponseHelper {
   // 未授权错误响应
   static unauthorized(
     reply: FastifyReply,
-    message: string = "未授权访问",
+    message: string = '未授权访问',
     requestId?: string
   ): void {
     this.error(
       reply,
       message,
-      "UNAUTHORIZED",
+      'UNAUTHORIZED',
       HttpStatus.UNAUTHORIZED,
       undefined,
       requestId
@@ -173,13 +173,13 @@ export class ResponseHelper {
   // 禁止访问错误响应
   static forbidden(
     reply: FastifyReply,
-    message: string = "禁止访问",
+    message: string = '禁止访问',
     requestId?: string
   ): void {
     this.error(
       reply,
       message,
-      "FORBIDDEN",
+      'FORBIDDEN',
       HttpStatus.FORBIDDEN,
       undefined,
       requestId
@@ -189,13 +189,13 @@ export class ResponseHelper {
   // 资源未找到错误响应
   static notFound(
     reply: FastifyReply,
-    message: string = "资源未找到",
+    message: string = '资源未找到',
     requestId?: string
   ): void {
     this.error(
       reply,
       message,
-      "NOT_FOUND",
+      'NOT_FOUND',
       HttpStatus.NOT_FOUND,
       undefined,
       requestId
@@ -205,13 +205,13 @@ export class ResponseHelper {
   // 冲突错误响应
   static conflict(
     reply: FastifyReply,
-    message: string = "资源冲突",
+    message: string = '资源冲突',
     requestId?: string
   ): void {
     this.error(
       reply,
       message,
-      "CONFLICT",
+      'CONFLICT',
       HttpStatus.CONFLICT,
       undefined,
       requestId
@@ -221,7 +221,7 @@ export class ResponseHelper {
   // 服务器内部错误响应
   static internalError(
     reply: FastifyReply,
-    message: string = "服务器内部错误",
+    message: string = '服务器内部错误',
     error?: string,
     details?: any,
     requestId?: string
@@ -229,7 +229,7 @@ export class ResponseHelper {
     this.error(
       reply,
       message,
-      error || "INTERNAL_SERVER_ERROR",
+      error || 'INTERNAL_SERVER_ERROR',
       HttpStatus.INTERNAL_SERVER_ERROR,
       details,
       requestId
@@ -244,15 +244,15 @@ export class PaginationHelper {
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(100, Math.max(1, params.limit || 10));
     const offset = (page - 1) * limit;
-    const sort = params.sort || "createdAt";
-    const order = params.order || "desc";
+    const sort = params.sort || 'createdAt';
+    const order = params.order || 'desc';
 
     return {
       page,
       limit,
       offset,
       sort,
-      order,
+      order
     };
   }
 
@@ -263,24 +263,24 @@ export class PaginationHelper {
     if (params.page !== undefined) {
       const page = Number(params.page);
       if (isNaN(page) || page < 1) {
-        errors.push("页码必须是大于0的整数");
+        errors.push('页码必须是大于0的整数');
       }
     }
 
     if (params.limit !== undefined) {
       const limit = Number(params.limit);
       if (isNaN(limit) || limit < 1 || limit > 100) {
-        errors.push("每页数量必须是1-100之间的整数");
+        errors.push('每页数量必须是1-100之间的整数');
       }
     }
 
-    if (params.order !== undefined && !["asc", "desc"].includes(params.order)) {
-      errors.push("排序方向必须是asc或desc");
+    if (params.order !== undefined && !['asc', 'desc'].includes(params.order)) {
+      errors.push('排序方向必须是asc或desc');
     }
 
     return {
       isValid: errors.length === 0,
-      errors,
+      errors
     };
   }
 }
@@ -311,8 +311,8 @@ export function withResponse<T>(
         return;
       }
 
-      const errorMessage = error instanceof Error ? error.message : "未知错误";
-      ResponseHelper.internalError(reply, "请求处理失败", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      ResponseHelper.internalError(reply, '请求处理失败', errorMessage);
     }
   };
 }

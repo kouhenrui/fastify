@@ -31,7 +31,7 @@ const mongoPlugin: FastifyPluginAsync<MongoOptions> = async (fastify, options) =
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
     bufferCommands: false,
-    ...mongoOptions,
+    ...mongoOptions
   };
 
   // 连接 MongoDB
@@ -62,9 +62,9 @@ const mongoPlugin: FastifyPluginAsync<MongoOptions> = async (fastify, options) =
     fastify.decorate('mongo', mongoose.connection);
 
   } catch (error) {
-    logger.error('MongoDB 连接失败', { 
+    logger.error('MongoDB 连接失败', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      uri: connectionString.replace(/\/\/.*@/, '//***:***@'),
+      uri: connectionString.replace(/\/\/.*@/, '//***:***@')
     });
     throw error;
   }

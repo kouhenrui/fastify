@@ -12,7 +12,7 @@ export class CustomError extends Error {
   constructor(
     message: string,
     statusCode: number = 500,
-    code: string = "CUSTOM_ERROR",
+    code: string = 'CUSTOM_ERROR',
     details?: any,
     isOperational: boolean = true
   ) {
@@ -32,7 +32,7 @@ export class CustomError extends Error {
 
 // 业务逻辑错误
 class BusinessError extends CustomError {
-  constructor(message: string, code: string = "BUSINESS_ERROR", details?: any) {
+  constructor(message: string, code: string = 'BUSINESS_ERROR', details?: any) {
     super(message, 400, code, details);
   }
 }
@@ -44,7 +44,7 @@ class ValidationError extends CustomError {
   constructor(
     message: string,
     validation?: any,
-    code: string = "VALIDATION_ERROR"
+    code: string = 'VALIDATION_ERROR'
   ) {
     super(message, 400, code, validation);
     this.validation = validation;
@@ -54,8 +54,8 @@ class ValidationError extends CustomError {
 // 认证错误
 class AuthenticationError extends CustomError {
   constructor(
-    message: string = "认证失败",
-    code: string = "AUTHENTICATION_ERROR"
+    message: string = '认证失败',
+    code: string = 'AUTHENTICATION_ERROR'
   ) {
     super(message, 401, code);
   }
@@ -64,8 +64,8 @@ class AuthenticationError extends CustomError {
 // 授权错误
 class AuthorizationError extends CustomError {
   constructor(
-    message: string = "权限不足",
-    code: string = "AUTHORIZATION_ERROR"
+    message: string = '权限不足',
+    code: string = 'AUTHORIZATION_ERROR'
   ) {
     super(message, 403, code);
   }
@@ -74,8 +74,8 @@ class AuthorizationError extends CustomError {
 // 资源未找到错误
 class NotFoundError extends CustomError {
   constructor(
-    message: string = "资源未找到",
-    code: string = "NOT_FOUND_ERROR"
+    message: string = '资源未找到',
+    code: string = 'NOT_FOUND_ERROR'
   ) {
     super(message, 404, code);
   }
@@ -83,21 +83,21 @@ class NotFoundError extends CustomError {
 
 // 冲突错误
 class ConflictError extends CustomError {
-  constructor(message: string = "资源冲突", code: string = "CONFLICT_ERROR") {
+  constructor(message: string = '资源冲突', code: string = 'CONFLICT_ERROR') {
     super(message, 409, code);
   }
 }
 
 // 数据库错误
 class DatabaseError extends CustomError {
-  constructor(message: string, code: string = "DATABASE_ERROR", details?: any) {
+  constructor(message: string, code: string = 'DATABASE_ERROR', details?: any) {
     super(message, 500, `DB_${code}`, details);
   }
 }
 
 // Redis 错误
 class RedisError extends CustomError {
-  constructor(message: string, code: string = "REDIS_ERROR", details?: any) {
+  constructor(message: string, code: string = 'REDIS_ERROR', details?: any) {
     super(message, 500, `REDIS_${code}`, details);
   }
 }
@@ -107,7 +107,7 @@ class ExternalServiceError extends CustomError {
   constructor(
     service: string,
     message: string,
-    code: string = "EXTERNAL_SERVICE_ERROR",
+    code: string = 'EXTERNAL_SERVICE_ERROR',
     details?: any
   ) {
     super(`${service}: ${message}`, 502, code, details);
@@ -117,8 +117,8 @@ class ExternalServiceError extends CustomError {
 // 限流错误
 class RateLimitError extends CustomError {
   constructor(
-    message: string = "请求过于频繁",
-    code: string = "RATE_LIMIT_ERROR",
+    message: string = '请求过于频繁',
+    code: string = 'RATE_LIMIT_ERROR',
     details?: any
   ) {
     super(message, 429, code, details);
@@ -127,35 +127,35 @@ class RateLimitError extends CustomError {
 
 // 配置错误
 class ConfigurationError extends CustomError {
-  constructor(message: string, code: string = "CONFIGURATION_ERROR") {
+  constructor(message: string, code: string = 'CONFIGURATION_ERROR') {
     super(message, 500, code);
   }
 }
 
 // 网络错误
 class NetworkError extends CustomError {
-  constructor(message: string, code: string = "NETWORK_ERROR", details?: any) {
+  constructor(message: string, code: string = 'NETWORK_ERROR', details?: any) {
     super(message, 503, code, details);
   }
 }
 
 // 超时错误
 class TimeoutError extends CustomError {
-  constructor(message: string = "请求超时", code: string = "TIMEOUT_ERROR") {
+  constructor(message: string = '请求超时', code: string = 'TIMEOUT_ERROR') {
     super(message, 408, code);
   }
 }
 
 // 文件操作错误
 class FileError extends CustomError {
-  constructor(message: string, code: string = "FILE_ERROR", details?: any) {
+  constructor(message: string, code: string = 'FILE_ERROR', details?: any) {
     super(message, 500, code, details);
   }
 }
 
 // 加密/解密错误
 class CryptoError extends CustomError {
-  constructor(message: string, code: string = "CRYPTO_ERROR") {
+  constructor(message: string, code: string = 'CRYPTO_ERROR') {
     super(message, 500, code);
   }
 }
