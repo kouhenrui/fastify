@@ -1,24 +1,24 @@
-import { Logger, logger } from '../../config/logger';
+import { Logger, logger } from "../../config/logger/logger";
 
 // 请求日志中间件
 export const requestLogger = (req: any, res: any, next: any) => {
   const start = Date.now();
 
-  res.on('finish', () => {
+  res.on("finish", () => {
     const duration = Date.now() - start;
     const logData = {
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       ip: req.ip || req.connection.remoteAddress
     };
 
     if (res.statusCode >= 400) {
-      logger.warn('HTTP Request', logData);
+      logger.warn("HTTP Request", logData);
     } else {
-      logger.http('HTTP Request', logData);
+      logger.http("HTTP Request", logData);
     }
   });
 
@@ -27,7 +27,7 @@ export const requestLogger = (req: any, res: any, next: any) => {
 
 // 错误日志记录器
 export const logError = (error: Error, context?: any) => {
-  logger.error('Application Error', {
+  logger.error("Application Error", {
     message: error.message,
     stack: error.stack,
     context,
@@ -36,8 +36,12 @@ export const logError = (error: Error, context?: any) => {
 };
 
 // 数据库操作日志
-export const logDatabaseOperation = (operation: string, collection: string, data?: any) => {
-  logger.info('Database Operation', {
+export const logDatabaseOperation = (
+  operation: string,
+  collection: string,
+  data?: any
+) => {
+  logger.info("Database Operation", {
     operation,
     collection,
     data: data ? JSON.stringify(data) : undefined,
@@ -46,9 +50,13 @@ export const logDatabaseOperation = (operation: string, collection: string, data
 };
 
 // 性能监控日志
-export const logPerformance = (operation: string, duration: number, metadata?: any) => {
-  const level = duration > 1000 ? 'warn' : 'info';
-  logger[level]('Performance Monitor', {
+export const logPerformance = (
+  operation: string,
+  duration: number,
+  metadata?: any
+) => {
+  const level = duration > 1000 ? "warn" : "info";
+  logger[level]("Performance Monitor", {
     operation,
     duration: `${duration}ms`,
     metadata,
@@ -58,7 +66,7 @@ export const logPerformance = (operation: string, duration: number, metadata?: a
 
 // 业务逻辑日志
 export const logBusiness = (action: string, userId?: string, data?: any) => {
-  logger.info('Business Logic', {
+  logger.info("Business Logic", {
     action,
     userId,
     data,
@@ -68,7 +76,7 @@ export const logBusiness = (action: string, userId?: string, data?: any) => {
 
 // 安全事件日志
 export const logSecurity = (event: string, details: any) => {
-  logger.warn('Security Event', {
+  logger.warn("Security Event", {
     event,
     details,
     timestamp: new Date().toISOString()

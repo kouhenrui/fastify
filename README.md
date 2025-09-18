@@ -128,6 +128,7 @@ GET /health
 ```
 
 响应示例：
+
 ```json
 {
   "status": "ok",
@@ -147,6 +148,7 @@ GET /
 ```
 
 响应示例：
+
 ```json
 {
   "message": "Fastify 服务运行正常",
@@ -164,8 +166,8 @@ GET /
 
 ```typescript
 // 在路由中使用
-fastify.get('/users', async (request, reply) => {
-  const users = await fastify.mongoose.model('User').find();
+fastify.get("/users", async (request, reply) => {
+  const users = await fastify.mongoose.model("User").find();
   return users;
 });
 ```
@@ -174,21 +176,23 @@ fastify.get('/users', async (request, reply) => {
 
 ```typescript
 // 缓存操作
-await fastify.cache.set('key', { data: 'value' }, 3600); // 1小时过期
-const data = await fastify.cache.get('key');
-await fastify.cache.del('key');
+await fastify.cache.set("key", { data: "value" }, 3600); // 1小时过期
+const data = await fastify.cache.get("key");
+await fastify.cache.del("key");
 ```
 
 ### PostgreSQL
 
 ```typescript
 // 数据库查询
-const result = await fastify.db.query('SELECT * FROM users WHERE id = $1', [userId]);
+const result = await fastify.db.query("SELECT * FROM users WHERE id = $1", [
+  userId
+]);
 
 // 事务操作
-await fastify.db.transaction(async (client) => {
-  await client.query('INSERT INTO users (name) VALUES ($1)', ['John']);
-  await client.query('INSERT INTO profiles (user_id) VALUES ($1)', [userId]);
+await fastify.db.transaction(async client => {
+  await client.query("INSERT INTO users (name) VALUES ($1)", ["John"]);
+  await client.query("INSERT INTO profiles (user_id) VALUES ($1)", [userId]);
 });
 ```
 
@@ -206,10 +210,10 @@ await fastify.db.transaction(async (client) => {
 
 ```typescript
 // 在路由中使用
-fastify.get('/test', async (request, reply) => {
-  fastify.logger.info('处理测试请求', { userId: 123 });
-  fastify.logger.error('错误信息', { error: 'Something went wrong' });
-  return { message: 'success' };
+fastify.get("/test", async (request, reply) => {
+  fastify.logger.info("处理测试请求", { userId: 123 });
+  fastify.logger.error("错误信息", { error: "Something went wrong" });
+  return { message: "success" };
 });
 ```
 

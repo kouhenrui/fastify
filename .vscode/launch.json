@@ -13,9 +13,7 @@
       },
       "console": "integratedTerminal",
       "restart": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true
     }
   ]

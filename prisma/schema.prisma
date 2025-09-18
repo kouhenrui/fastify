@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+// PostgreSQL 数据源
+datasource postgres {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+
+// PostgreSQL 模型
+model PostgresAccount {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  avatar      String?
+  role        String   @default("user")
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  @@map("account")
+}
+
+// Casbin 权限模型 (PostgreSQL)
+model CasbinRule {
+  id    Int    @id @default(autoincrement())
+  ptype String
+  v0    String
+  v1    String
+  v2    String
+  v3    String
+  v4    String
+  v5    String
+
+  @@map("casbin")
+}

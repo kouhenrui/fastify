@@ -1,11 +1,11 @@
-import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import {
   PaginationHelper,
   ResponseHelper
-} from '../../utils/response/response';
-import fp from 'fastify-plugin';
-import { CustomError } from '../../utils/errors/custom-errors';
-import { getClientIP } from '../../utils/cors/cors';
+} from "../../utils/response/response";
+import fp from "fastify-plugin";
+import { CustomError } from "../../utils/errors/custom-errors";
+import { getClientIP } from "../../utils/cors/cors";
 // 响应插件选项
 interface ResponseOptions {
   enableRequestId?: boolean;
@@ -19,26 +19,24 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   fastify,
   options
 ) => {
-  const {
-    enableRequestId = true
-  } = options;
+  const { enableRequestId = true } = options;
 
   // 生成请求 ID 的装饰器
   if (enableRequestId) {
-    fastify.decorateRequest('requestId', '');
+    fastify.decorateRequest("requestId", "");
 
-    fastify.addHook('onRequest', async (request: FastifyRequest) => {
+    fastify.addHook("onRequest", async (request: FastifyRequest) => {
       request.requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     });
   }
 
   // 将响应工具添加到 fastify 实例
-  fastify.decorate('response', ResponseHelper);
-  fastify.decorate('pagination', PaginationHelper);
+  fastify.decorate("response", ResponseHelper);
+  fastify.decorate("pagination", PaginationHelper);
 
   // 扩展 FastifyReply 类型
-  fastify.decorateReply('success', function <
-    T,
+  fastify.decorateReply("success", function <
+    T
   >(this: FastifyReply, data: T, message?: string, code?: number) {
     ResponseHelper.success(
       this,
@@ -49,8 +47,8 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
     );
   });
 
-  fastify.decorateReply('created', function <
-    T,
+  fastify.decorateReply("created", function <
+    T
   >(this: FastifyReply, data: T, message?: string) {
     ResponseHelper.created(
       this,
@@ -61,20 +59,20 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   });
 
   fastify.decorateReply(
-    'noContent',
+    "noContent",
     function (this: FastifyReply, message?: string) {
       ResponseHelper.noContent(this, message, (this.request as any).requestId);
     }
   );
 
-  fastify.decorateReply('list', function <
-    T,
+  fastify.decorateReply("list", function <
+    T
   >(this: FastifyReply, items: T[], message?: string) {
     ResponseHelper.list(this, items, message, (this.request as any).requestId);
   });
 
-  fastify.decorateReply('paginated', function <
-    T,
+  fastify.decorateReply("paginated", function <
+    T
   >(this: FastifyReply, items: T[], total: number, page: number, limit: number, message?: string) {
     ResponseHelper.paginated(
       this,
@@ -88,7 +86,7 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   });
 
   fastify.decorateReply(
-    'error',
+    "error",
     function (
       this: FastifyReply,
       message: string,
@@ -108,7 +106,7 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   );
 
   fastify.decorateReply(
-    'validationError',
+    "validationError",
     function (this: FastifyReply, message?: string, details?: any) {
       ResponseHelper.validationError(
         this,
@@ -120,7 +118,7 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   );
 
   fastify.decorateReply(
-    'unauthorized',
+    "unauthorized",
     function (this: FastifyReply, message?: string) {
       ResponseHelper.unauthorized(
         this,
@@ -131,28 +129,28 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   );
 
   fastify.decorateReply(
-    'forbidden',
+    "forbidden",
     function (this: FastifyReply, message?: string) {
       ResponseHelper.forbidden(this, message, (this.request as any).requestId);
     }
   );
 
   fastify.decorateReply(
-    'notFound',
+    "notFound",
     function (this: FastifyReply, message?: string) {
       ResponseHelper.notFound(this, message, (this.request as any).requestId);
     }
   );
 
   fastify.decorateReply(
-    'conflict',
+    "conflict",
     function (this: FastifyReply, message?: string) {
       ResponseHelper.conflict(this, message, (this.request as any).requestId);
     }
   );
 
   fastify.decorateReply(
-    'internalError',
+    "internalError",
     function (
       this: FastifyReply,
       message?: string,
@@ -172,13 +170,13 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   // 全局错误处理
   fastify.setErrorHandler(async (error, request, reply) => {
     const requestId = (request as any).requestId;
-    fastify.logger.error('全局错误处理请求处理错误', {
+    fastify.logger.error("全局错误处理请求处理错误", {
       error: error.message,
       stack: error.stack,
       method: request.method,
       url: request.url,
       statusCode: reply.statusCode,
-      userAgent: request.headers['user-agent'] || 'unknown',
+      userAgent: request.headers["user-agent"] || "unknown",
       timestamp: new Date().toISOString(),
       ip: getClientIP(request),
       requestId
@@ -196,9 +194,9 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
     // 未知错误
     return ResponseHelper.internalError(
       reply,
-      process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误',
-      'INTERNAL_SERVER_ERROR',
-      process.env.NODE_ENV === 'development'
+      process.env.NODE_ENV === "development" ? error.message : "服务器内部错误",
+      "INTERNAL_SERVER_ERROR",
+      process.env.NODE_ENV === "development"
         ? { stack: error.stack }
         : undefined,
       requestId
@@ -208,12 +206,12 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   // 404 处理
   fastify.setNotFoundHandler(async (request, reply) => {
     const requestId = (request as any).requestId;
-    ResponseHelper.notFound(reply, '请求的资源不存在', requestId);
+    ResponseHelper.notFound(reply, "请求的资源不存在", requestId);
   });
 };
 
 // 类型声明
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyInstance {
     response: typeof ResponseHelper;
     pagination: typeof PaginationHelper;
@@ -246,5 +244,5 @@ declare module 'fastify' {
 }
 
 export default fp(responsePlugin, {
-  name: 'response'
+  name: "response"
 });

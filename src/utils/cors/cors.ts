@@ -8,13 +8,16 @@
  * @param allowedOrigins 允许的来源列表
  * @returns 是否允许
  */
-export function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+export function isOriginAllowed(
+  origin: string,
+  allowedOrigins: string[]
+): boolean {
   if (!origin) return false;
 
   return allowedOrigins.some(allowed => {
     // 支持通配符匹配
-    if (allowed.includes('*')) {
-      const pattern = allowed.replace(/\*/g, '.*');
+    if (allowed.includes("*")) {
+      const pattern = allowed.replace(/\*/g, ".*");
       const regex = new RegExp(`^${pattern}$`);
       return regex.test(origin);
     }
@@ -44,13 +47,13 @@ export function generateCorsHeaders(
 
   // 检查 Origin 是否允许
   if (isOriginAllowed(origin, allowedOrigins)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-    headers['Access-Control-Allow-Credentials'] = 'true';
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Access-Control-Allow-Credentials"] = "true";
   }
 
-  headers['Access-Control-Allow-Methods'] = allowedMethods.join(', ');
-  headers['Access-Control-Allow-Headers'] = allowedHeaders.join(', ');
-  headers['Access-Control-Max-Age'] = maxAge.toString();
+  headers["Access-Control-Allow-Methods"] = allowedMethods.join(", ");
+  headers["Access-Control-Allow-Headers"] = allowedHeaders.join(", ");
+  headers["Access-Control-Max-Age"] = maxAge.toString();
 
   return headers;
 }
@@ -61,9 +64,14 @@ export function generateCorsHeaders(
  * @param headers 请求头
  * @returns 是否为预检请求
  */
-export function isPreflightRequest(method: string, headers: Record<string, string | string[] | undefined>): boolean {
-  return method === 'OPTIONS' &&
-         headers['access-control-request-method'] !== undefined;
+export function isPreflightRequest(
+  method: string,
+  headers: Record<string, string | string[] | undefined>
+): boolean {
+  return (
+    method === "OPTIONS" &&
+    headers["access-control-request-method"] !== undefined
+  );
 }
 
 /**
@@ -72,11 +80,13 @@ export function isPreflightRequest(method: string, headers: Record<string, strin
  * @returns IP 地址
  */
 export function getClientIP(request: any): string {
-  return request.ip ||
-         request.headers['x-forwarded-for'] ||
-         request.headers['x-real-ip'] ||
-         request.connection?.remoteAddress ||
-         'unknown';
+  return (
+    request.ip ||
+    request.headers["x-forwarded-for"] ||
+    request.headers["x-real-ip"] ||
+    request.connection?.remoteAddress ||
+    "unknown"
+  );
 }
 
 /**
@@ -88,8 +98,8 @@ export const CORS_SECURITY_CONFIG = {
     origin: false, // 需要明确指定允许的域名
     credentials: true,
     maxAge: 3600, // 1小时
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   },
 
   // 开发环境宽松配置
@@ -97,17 +107,23 @@ export const CORS_SECURITY_CONFIG = {
     origin: true, // 允许所有来源
     credentials: true,
     maxAge: 86400, // 24小时
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin"
+    ]
   },
 
   // 测试环境配置
   test: {
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     credentials: true,
     maxAge: 0, // 不缓存
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   }
 };
 
@@ -116,14 +132,13 @@ export const CORS_SECURITY_CONFIG = {
  * @param env 环境变量
  * @returns CORS 配置
  */
-export function getCorsConfigByEnv(env: string = 'development') {
+export function getCorsConfigByEnv(env: string = "development") {
   switch (env) {
-  case 'production':
-    return CORS_SECURITY_CONFIG.production;
-  case 'test':
-    return CORS_SECURITY_CONFIG.test;
-  default:
-    return CORS_SECURITY_CONFIG.development;
+    case "production":
+      return CORS_SECURITY_CONFIG.production;
+    case "test":
+      return CORS_SECURITY_CONFIG.test;
+    default:
+      return CORS_SECURITY_CONFIG.development;
   }
 }
-

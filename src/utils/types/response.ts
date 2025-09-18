@@ -58,7 +58,7 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 // 分页查询参数接口
@@ -67,7 +67,7 @@ export interface PaginationQuery {
   limit: number;
   offset: number;
   sort: string;
-  order: 'asc' | 'desc';
+  order: "asc" | "desc";
 }
 
 // 标准 HTTP 状态码
@@ -83,7 +83,7 @@ export enum HttpStatus {
   UNPROCESSABLE_ENTITY = 422,
   INTERNAL_SERVER_ERROR = 500,
   BAD_GATEWAY = 502,
-  SERVICE_UNAVAILABLE = 503,
+  SERVICE_UNAVAILABLE = 503
 }
 
 // 业务状态码
@@ -96,5 +96,5 @@ export enum BusinessCode {
   RESOURCE_CONFLICT = 1005,
   DATABASE_ERROR = 2001,
   EXTERNAL_SERVICE_ERROR = 2002,
-  UNKNOWN_ERROR = 9999,
+  UNKNOWN_ERROR = 9999
 }
