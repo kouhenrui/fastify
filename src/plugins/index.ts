@@ -5,12 +5,13 @@ import fastifySwaggerUi from "@fastify/swagger-ui";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import helmet from "@fastify/helmet";
+import mongoosePlugin from "./dataBase/mongoose";
 import loggerPlugin from "./logger/logger";
 import responsePlugin from "./response/response";
 import redisPlugin from "./cache/redis";
 // import prismaPlugin from "./dataBase/prisma";
 // import typeormPlugin from "./dataBase/typeorm";
-import mongoosePlugin from "./dataBase/mongoose";
+// import mongoosePlugin from "./dataBase/mongoose";
 import logger from "../config/logger/logger";
 import { getCorsConfigByEnv } from "../utils/cors/cors";
 import { ErrorFactory } from "../utils/errors/custom-errors";
@@ -22,8 +23,6 @@ async function registerPlugins(fastify: FastifyInstance) {
   try {
     // 注册日志插件
     await fastify.register(loggerPlugin, {
-      enableRequestLogging: true,
-      enableErrorLogging: true,
       logLevel: KEY.logLevel as "info" | "error" | "warn" | "debug"
     });
 
@@ -56,14 +55,46 @@ async function registerPlugins(fastify: FastifyInstance) {
     await fastify.register(fastifySwagger, {
       swagger: {
         info: {
-          title: "Fastify Swagger",
-          version: "1.0.0",
-          description: "Fastify API 文档"
+          title: "Fastify API 文档",
+          version: KEY.apiVersion,
+          description:
+            "基于 Fastify 的现代化 Node.js API 服务，支持多数据库、Redis 缓存、JWT 认证等功能",
+          contact: {
+            name: "API 支持",
+            email: "support@example.com"
+          },
+          license: {
+            name: "MIT",
+            url: "https://opensource.org/licenses/MIT"
+          }
         },
         host: "localhost:3000",
-        schemes: ["http"],
+        schemes: ["http", "https"],
         consumes: ["application/json"],
-        produces: ["application/json"]
+        produces: ["application/json"],
+        tags: [
+          {
+            name: "认证",
+            description: "用户认证相关接口"
+          },
+          {
+            name: "系统",
+            description: "系统信息和健康检查"
+          }
+        ],
+        securityDefinitions: {
+          bearerAuth: {
+            type: "apiKey",
+            name: "Authorization",
+            in: "header",
+            description: "JWT Bearer Token 认证"
+          }
+        },
+        security: [
+          {
+            bearerAuth: []
+          }
+        ]
       }
     });
     // 注册 Swagger UI 插件
@@ -111,6 +142,10 @@ async function registerPlugins(fastify: FastifyInstance) {
       contentSecurityPolicy: false
     });
 
+    // 注册 Mongoose 插件
+    await fastify.register(mongoosePlugin, {
+      uri: KEY.mongodbUri
+    });
 
     // 注册 TypeORM 插件
     // await fastify.register(typeormPlugin,{autoInitialize: true});
@@ -119,9 +154,9 @@ async function registerPlugins(fastify: FastifyInstance) {
     // await fastify.register(prismaPlugin, {autoInitialize: true});
 
     // 注册 Mongoose 插件
-    await fastify.register(mongoosePlugin, {
-      uri: KEY.mongodbUri
-    });
+    // await fastify.register(mongoosePlugin, {
+    //   uri: KEY.mongodbUri
+    // });
     // 日志输出已挂载的插件
     logger.info("已挂载的插件:", {
       plugins: [

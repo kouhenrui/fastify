@@ -6,6 +6,7 @@ import {
 import fp from "fastify-plugin";
 import { CustomError } from "../../utils/errors/custom-errors";
 import { getClientIP } from "../../utils/cors/cors";
+import { logger } from "../../config/logger/logger";
 // 响应插件选项
 interface ResponseOptions {
   enableRequestId?: boolean;
@@ -26,7 +27,7 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
     fastify.decorateRequest("requestId", "");
 
     fastify.addHook("onRequest", async (request: FastifyRequest) => {
-      request.requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      request.requestId = `${Date.now()}${Math.random().toString(36).substring(2, 9)}`;
     });
   }
 
@@ -38,6 +39,16 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   fastify.decorateReply("success", function <
     T
   >(this: FastifyReply, data: T, message?: string, code?: number) {
+    // 使用 logger 打印返回数据
+    logger.info("📤 API 响应", {
+      url: this.request.url,
+      method: this.request.method,
+      statusCode: code || 200,
+      message,
+      data,
+      requestId: (this.request as any).requestId
+    });
+
     ResponseHelper.success(
       this,
       data,
@@ -94,6 +105,18 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
       code?: number,
       details?: any
     ) {
+      // 使用 logger 打印错误响应
+      logger.error("❌ API 错误响应", {
+        url: this.request.url,
+        method: this.request.method,
+        statusCode: code || 500,
+        message: message || "未知错误",
+        error: error || "UNKNOWN_ERROR",
+        details: details || null,
+        requestId: (this.request as any).requestId,
+        timestamp: new Date().toISOString()
+      });
+
       ResponseHelper.error(
         this,
         message,
@@ -108,6 +131,15 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   fastify.decorateReply(
     "validationError",
     function (this: FastifyReply, message?: string, details?: any) {
+      // 使用 logger 打印验证错误
+      logger.warn("⚠️ API 验证错误", {
+        url: this.request.url,
+        method: this.request.method,
+        message,
+        details,
+        requestId: (this.request as any).requestId
+      });
+
       ResponseHelper.validationError(
         this,
         message,
@@ -120,6 +152,14 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   fastify.decorateReply(
     "unauthorized",
     function (this: FastifyReply, message?: string) {
+      // 使用 logger 打印未授权错误
+      logger.warn("🔒 API 未授权", {
+        url: this.request.url,
+        method: this.request.method,
+        message,
+        requestId: (this.request as any).requestId
+      });
+
       ResponseHelper.unauthorized(
         this,
         message,
@@ -131,6 +171,14 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
   fastify.decorateReply(
     "forbidden",
     function (this: FastifyReply, message?: string) {
+      // 使用 logger 打印禁止访问错误
+      logger.warn("🚫 API 禁止访问", {
+        url: this.request.url,
+        method: this.request.method,
+        message,
+        requestId: (this.request as any).requestId
+      });
+
       ResponseHelper.forbidden(this, message, (this.request as any).requestId);
     }
   );

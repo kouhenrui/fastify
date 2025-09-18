@@ -3,7 +3,6 @@ import { logger } from "../../config/logger/logger.js";
 import fp from "fastify-plugin";
 // 日志插件选项
 interface LoggerOptions {
-  enableRequestLogging?: boolean;
   enableErrorLogging?: boolean;
   logLevel?: "error" | "warn" | "info" | "http" | "debug";
 }
@@ -13,11 +12,7 @@ const loggerPlugin: FastifyPluginAsync<LoggerOptions> = async (
   fastify,
   options
 ) => {
-  const {
-    enableRequestLogging = true,
-    enableErrorLogging = true,
-    logLevel = "info"
-  } = options;
+  const { logLevel = "info" } = options;
 
   // 设置日志级别
   logger.level = logLevel;
@@ -32,53 +27,48 @@ const loggerPlugin: FastifyPluginAsync<LoggerOptions> = async (
     throw new Error("日志装饰器添加失败：fastify.logger 未定义");
   }
 
-  // 请求日志中间件
-  if (enableRequestLogging) {
-    fastify.addHook("onRequest", async (request, _reply) => {
-      const start = Date.now();
-      request.startTime = start;
-    });
+  fastify.addHook("onRequest", async (request, _reply) => {
+    const start = Date.now();
+    request.startTime = start;
+  });
 
-    fastify.addHook("onResponse", async (request, reply) => {
-      const duration = Date.now() - (request.startTime || Date.now());
-      const logData = {
-        method: request.method,
-        url: request.url,
-        statusCode: reply.statusCode,
-        duration: `${duration}ms`,
-        userAgent: request.headers["user-agent"],
-        ip: request.ip,
-        timestamp: new Date().toISOString()
-      };
+  fastify.addHook("onResponse", async (request, reply) => {
+    const duration = Date.now() - (request.startTime || Date.now());
+    const logData = {
+      method: request.method,
+      url: request.url,
+      statusCode: reply.statusCode,
+      duration: `${duration}ms`,
+      userAgent: request.headers["user-agent"],
+      ip: request.ip,
+      timestamp: new Date().toISOString()
+      // body:reply.body
+    };
 
-      if (reply.statusCode >= 400) {
-        logger.warn("HTTP Request", logData);
-      } else {
-        logger.http("HTTP Request", logData);
-      }
-    });
-  }
+    if (reply.statusCode >= 400) {
+      logger.warn("HTTP Request", logData);
+    } else {
+      logger.info("HTTP Request", logData);
+    }
+  });
 
-  // 错误处理中间件
-  if (enableErrorLogging) {
-    fastify.setErrorHandler(async (error, request, reply) => {
-      logger.error("日志插件请求处理错误", {
-        error: error.message,
-        stack: error.stack,
-        method: request.method,
-        url: request.url,
-        statusCode: reply.statusCode,
-        timestamp: new Date().toISOString()
-      });
-      reply.status(500).send({
-        error: "Internal Server Error",
-        message:
-          process.env.NODE_ENV === "development"
-            ? error.message
-            : "Something went wrong"
-      });
+  fastify.setErrorHandler(async (error, request, reply) => {
+    logger.error("日志插件请求处理错误", {
+      error: error.message,
+      stack: error.stack,
+      method: request.method,
+      url: request.url,
+      statusCode: reply.statusCode,
+      timestamp: new Date().toISOString()
     });
-  }
+    reply.status(500).send({
+      error: "Internal Server Error",
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong"
+    });
+  });
 
   // 应用关闭日志
   fastify.addHook("onClose", async () => {
@@ -94,6 +84,11 @@ declare module "fastify" {
 
   interface FastifyRequest {
     startTime?: number;
+    Body?: Record<string, any>;
+    Params?: Record<string, any>;
+    Query?: Record<string, any>;
+    Headers?: Record<string, any>;
+    Cookies?: Record<string, any>;
   }
 }
 

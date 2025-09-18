@@ -1,0 +1,40 @@
+import { FastifyInstance } from "fastify";
+import {
+  authResponseSchema,
+  loginRequestSchema,
+  registerRequestSchema
+} from "../schemas";
+import authController from "../controller/auth.controller";
+
+export default async function authRoutes(auth: FastifyInstance) {
+  // 用户登录
+  auth.post(
+    "/login",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "用户登录",
+        description: "通过用户名/邮箱和密码进行用户登录",
+        body: loginRequestSchema
+      }
+    },
+    authController.login
+  );
+
+  // 用户注册
+  auth.post(
+    "/register",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "用户注册",
+        description: "创建新用户账户",
+        body: registerRequestSchema,
+        response: {
+          200: authResponseSchema
+        }
+      }
+    },
+    authController.register
+  );
+}

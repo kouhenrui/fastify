@@ -1,8 +1,8 @@
 import { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
-import { MongoModel } from "../../model/mongo";
+import mongoose from "mongoose";
 import { logger } from "../../config/logger/logger";
-import mongoose, { Connection } from "mongoose";
+
 import { ErrorFactory } from "../../utils/errors/custom-errors";
 
 // Mongoose 插件选项
@@ -28,58 +28,23 @@ const mongoosePlugin: FastifyPluginAsync<MongooseOptions> = async (
       socketTimeoutMS: 45000,
       ...op
     };
-    const connection = await MongoModel.init(uri, defaultOptions);
-    if (!connection) throw ErrorFactory.configuration("MongoDB 连接初始化失败");
-    // 将连接添加到 fastify 实例
-    fastify.decorate("mongoose", connection);
 
-    // 添加 MongoDB 工具方法
-    fastify.decorate("mongoUtils", {
-      /**
-       * 获取集合
-       * @param name 集合名称
-       * @returns 集合实例
-       */
-      getCollection: (name: string) => {
-        return connection.collection(name);
-      },
-
-      /**
-       * 执行原生查询
-       * @param operation 操作函数
-       * @returns 查询结果
-       */
-      executeQuery: async (operation: (db: any) => Promise<any>) => {
-        return await operation(connection.db);
-      },
-
-      /**
-       * 创建索引
-       * @param collection 集合名称
-       * @param indexSpec 索引规范
-       * @param options 索引选项
-       */
-      createIndex: async (
-        collection: string,
-        indexSpec: any,
-        options?: any
-      ) => {
-        return await connection
-          .collection(collection)
-          .createIndex(indexSpec, options);
-      }
-    });
+    // 直接连接 MongoDB
+    await mongoose.connect(uri, defaultOptions);
   } catch (error: any) {
     logger.error("MongoDB Mongoose 插件注册失败", {
       error: error.message
     });
-    throw error;
+    throw ErrorFactory.configuration(
+      "MongoDB Mongoose 插件注册失败",
+      error.message
+    );
   }
 
   // 优雅关闭
   fastify.addHook("onClose", async () => {
     try {
-      await MongoModel.close();
+      await mongoose.disconnect();
       logger.info("MongoDB Mongoose 连接已关闭");
     } catch (error: any) {
       logger.error("关闭 MongoDB Mongoose 连接失败", {
@@ -88,22 +53,6 @@ const mongoosePlugin: FastifyPluginAsync<MongooseOptions> = async (
     }
   });
 };
-
-// 类型声明
-declare module "fastify" {
-  interface FastifyInstance {
-    mongoose: Connection;
-    mongoUtils: {
-      getCollection: (name: string) => any;
-      executeQuery: (operation: (db: any) => Promise<any>) => Promise<any>;
-      createIndex: (
-        collection: string,
-        indexSpec: any,
-        options?: any
-      ) => Promise<any>;
-    };
-  }
-}
 
 export default fp(mongoosePlugin, {
   name: "mongoose"

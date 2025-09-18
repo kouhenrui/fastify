@@ -1,18 +1,29 @@
 import { FastifyInstance } from "fastify";
+import v1Routes from "./v1";
+import { KEY } from "../config/key";
+import {
+  errorResponseSchema,
+  healthCheckSchema,
+  systemInfoSchema
+} from "../schemas";
 
-export default function router(fastify: FastifyInstance) {
+export default async function router(fastify: FastifyInstance) {
   // 健康检查路由
-  fastify.get("/health", async function (request, reply) {
+  fastify.get("/health", {
+    schema: {
+      tags: ["系统"],
+      summary: "健康检查",
+      description: "检查服务运行状态和系统资源使用情况",
+      response: {
+        200: healthCheckSchema,
+        500: errorResponseSchema
+      }
+    }
+  }, async function (request, reply) {
     try {
-      const services: Record<string, boolean> = {
-        mongodb: fastify.mongoose.connection.readyState === 1,
-        redis: fastify.redis.status === "ready"
-      };
-
       return reply.success(
         {
           status: "healthy",
-          services,
           uptime: process.uptime(),
           memory: process.memoryUsage()
         },
@@ -26,7 +37,45 @@ export default function router(fastify: FastifyInstance) {
   });
 
   // 根路径
-  fastify.get("/", async function (request, reply) {
+  fastify.get("/", {
+    schema: {
+      tags: ["系统"],
+      summary: "服务首页",
+      description: "获取服务基本信息和功能特性",
+        response: {
+        200: {
+          type: "object",
+          properties: {
+            code: { type: "number" },
+            message: { type: "string" },
+            data: {
+              type: "object",
+              properties: {
+                message: { type: "string" },
+                version: { type: "string" },
+                environment: { type: "string" },
+                databases: {
+                  type: "object",
+                  properties: {
+                    mongodb: { type: "string" },
+                    redis: { type: "string" },
+                    postgres: { type: "string" }
+                  }
+                },
+                features: {
+                  type: "array",
+                  items: { type: "string" }
+                }
+              }
+            },
+            timestamp: { type: "number" },
+            requestId: { type: "string" }
+          }
+        },
+        500: errorResponseSchema
+      }
+    }
+  }, async function (request, reply) {
     try {
       return reply.success(
         {
@@ -55,11 +104,21 @@ export default function router(fastify: FastifyInstance) {
   });
 
   // API 信息路由
-  fastify.get("/api/info", async function (request, reply) {
+  fastify.get("/api/info", {
+    schema: {
+      tags: ["系统"],
+      summary: "获取 API 信息",
+      description: "获取 API 的基本信息和技术栈",
+      response: {
+        200: systemInfoSchema,
+        500: errorResponseSchema
+      }
+    }
+  }, async function (request, reply) {
     return reply.success(
       {
         name: "Fastify API",
-        version: "1.0.0",
+        version: KEY.apiVersion,
         description: "基于 Fastify 的现代化 Node.js API 服务",
         technologies: [
           "Fastify 5.x",
@@ -73,4 +132,7 @@ export default function router(fastify: FastifyInstance) {
       "API 信息获取成功"
     );
   });
+
+  // 注册 v1 版本路由
+  await fastify.register(v1Routes, { prefix: KEY.apiVersion });
 }
