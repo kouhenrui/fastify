@@ -3,24 +3,20 @@ import DailyRotateFile from "winston-daily-rotate-file";
 
 // 日志级别配置
 export const LOG_LEVELS = {
-  fatal: 0,
   error: 1,
   warn: 2,
   info: 3,
   http: 4,
-  debug: 5,
-  trace: 6
+  debug: 5
 } as const;
 
 // 日志颜色配置
 export const LOG_COLORS = {
-  fatal: "red",
   error: "red",
   warn: "yellow",
   info: "green",
   http: "magenta",
-  debug: "white",
-  trace: "gray"
+  debug: "white"
 } as const;
 
 // 自定义日志格式
@@ -98,13 +94,11 @@ if (process.env.NODE_ENV === "development") {
 
 // 日志器接口
 export interface Logger {
-  fatal: (message: string, meta?: Record<string, any>) => void;
   error: (message: string, meta?: Record<string, any>) => void;
   warn: (message: string, meta?: Record<string, any>) => void;
   info: (message: string, meta?: Record<string, any>) => void;
   http: (message: string, meta?: Record<string, any>) => void;
   debug: (message: string, meta?: Record<string, any>) => void;
-  trace: (message: string, meta?: Record<string, any>) => void;
 }
 
 // 导出默认日志器

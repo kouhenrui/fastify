@@ -26,7 +26,7 @@
 
     // 启用所有严格类型检查选项
     "strict": true,
-    
+
     // 关闭严格属性初始化检查（TypeORM 装饰器会处理初始化）
     "strictPropertyInitialization": false,
 

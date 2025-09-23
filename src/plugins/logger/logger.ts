@@ -41,8 +41,8 @@ const loggerPlugin: FastifyPluginAsync<LoggerOptions> = async (
       duration: `${duration}ms`,
       userAgent: request.headers["user-agent"],
       ip: request.ip,
-      timestamp: new Date().toISOString()
-      // body:reply.body
+      timestamp: new Date().toISOString(),
+      requestId: request.requestId
     };
 
     if (reply.statusCode >= 400) {
@@ -50,24 +50,6 @@ const loggerPlugin: FastifyPluginAsync<LoggerOptions> = async (
     } else {
       logger.info("HTTP Request", logData);
     }
-  });
-
-  fastify.setErrorHandler(async (error, request, reply) => {
-    logger.error("日志插件请求处理错误", {
-      error: error.message,
-      stack: error.stack,
-      method: request.method,
-      url: request.url,
-      statusCode: reply.statusCode,
-      timestamp: new Date().toISOString()
-    });
-    reply.status(500).send({
-      error: "Internal Server Error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? error.message
-          : "Something went wrong"
-    });
   });
 
   // 应用关闭日志

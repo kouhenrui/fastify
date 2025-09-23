@@ -1,0 +1,153 @@
+{
+  "common": {
+    "success": "成功",
+    "error": "エラー",
+    "warning": "警告",
+    "info": "情報",
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "reset": "リセット",
+    "submit": "送信",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "close": "閉じる",
+    "open": "開く",
+    "yes": "はい",
+    "no": "いいえ"
+  },
+  "auth": {
+    "login": {
+      "title": "ユーザーログイン",
+      "username": "ユーザー名",
+      "password": "パスワード",
+      "email": "メールアドレス",
+      "remember": "ログイン状態を保持",
+      "forgot": "パスワードを忘れた？",
+      "success": "ログイン成功",
+      "failed": "ログイン失敗",
+      "invalid_credentials": "ユーザー名またはパスワードが間違っています",
+      "account_locked": "アカウントがロックされています",
+      "account_disabled": "アカウントが無効になっています"
+    },
+    "register": {
+      "title": "ユーザー登録",
+      "username": "ユーザー名",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "confirm_password": "パスワード確認",
+      "success": "登録成功",
+      "failed": "登録失敗",
+      "username_exists": "ユーザー名は既に存在します",
+      "email_exists": "メールアドレスは既に存在します",
+      "password_mismatch": "パスワードが一致しません",
+      "weak_password": "パスワードの強度が不足しています"
+    },
+    "logout": {
+      "success": "ログアウト成功",
+      "failed": "ログアウト失敗"
+    },
+    "permission": {
+      "denied": "権限がありません",
+      "required": "ログインが必要です",
+      "expired": "ログインが期限切れです",
+      "invalid_token": "無効なアクセストークンです"
+    }
+  },
+  "user": {
+    "profile": {
+      "title": "ユーザープロフィール",
+      "username": "ユーザー名",
+      "email": "メールアドレス",
+      "avatar": "アバター",
+      "department": "部署",
+      "level": "レベル",
+      "location": "場所",
+      "roles": "ロール",
+      "last_login": "最終ログイン",
+      "created_at": "作成日時",
+      "updated_at": "更新日時"
+    },
+    "management": {
+      "title": "ユーザー管理",
+      "add_user": "ユーザー追加",
+      "edit_user": "ユーザー編集",
+      "delete_user": "ユーザー削除",
+      "assign_role": "ロール割り当て",
+      "revoke_role": "ロール取り消し",
+      "user_list": "ユーザー一覧",
+      "total_users": "総ユーザー数：{{count}}",
+      "active_users": "アクティブユーザー数：{{count}}"
+    }
+  },
+  "role": {
+    "management": {
+      "title": "ロール管理",
+      "add_role": "ロール追加",
+      "edit_role": "ロール編集",
+      "delete_role": "ロール削除",
+      "role_list": "ロール一覧",
+      "assign_permission": "権限割り当て",
+      "revoke_permission": "権限取り消し",
+      "role_name": "ロール名",
+      "role_code": "ロールコード",
+      "description": "説明",
+      "level": "レベル",
+      "permissions": "権限"
+    }
+  },
+  "resource": {
+    "management": {
+      "title": "リソース管理",
+      "add_resource": "リソース追加",
+      "edit_resource": "リソース編集",
+      "delete_resource": "リソース削除",
+      "resource_list": "リソース一覧",
+      "resource_name": "リソース名",
+      "resource_code": "リソースコード",
+      "resource_type": "リソースタイプ",
+      "path": "パス",
+      "method": "メソッド",
+      "description": "説明"
+    }
+  },
+  "permission": {
+    "management": {
+      "title": "権限管理",
+      "check_permission": "権限確認",
+      "grant_permission": "権限付与",
+      "revoke_permission": "権限取り消し",
+      "permission_denied": "権限がありません",
+      "access_denied": "アクセスが拒否されました",
+      "insufficient_privileges": "この操作を実行する権限が不足しています"
+    }
+  },
+  "validation": {
+    "required": "{{field}} は必須項目です",
+    "min_length": "{{field}} は {{min}} 文字以上である必要があります",
+    "max_length": "{{field}} は {{max}} 文字以下である必要があります",
+    "email_format": "メールアドレスの形式が正しくありません",
+    "password_strength": "パスワードには大文字、小文字、数字、特殊文字を含める必要があります",
+    "username_format": "ユーザー名には文字、数字、アンダースコアのみ使用できます",
+    "unique": "{{field}} は既に存在します",
+    "not_found": "{{field}} が見つかりません",
+    "invalid_format": "{{field}} の形式が正しくありません"
+  },
+  "error": {
+    "server_error": "サーバー内部エラー",
+    "network_error": "ネットワーク接続エラー",
+    "timeout": "リクエストタイムアウト",
+    "not_found": "リソースが見つかりません",
+    "unauthorized": "認証されていません",
+    "forbidden": "アクセスが禁止されています",
+    "bad_request": "リクエストパラメータが正しくありません",
+    "conflict": "リソースの競合",
+    "too_many_requests": "リクエストが多すぎます"
+  }
+}

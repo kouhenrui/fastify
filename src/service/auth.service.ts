@@ -1,37 +1,41 @@
 import { LoginRequestBody, RegisterRequestBody } from "../utils/do/auth";
 import { ErrorFactory } from "../utils/errors/custom-errors";
-import * as bcrypt from "bcrypt";
-import Account from "../model/mongo/account";
-
+import Account, { IAccount } from "../model/mongo/account";
+import t from "../utils/i18n";
+import { generateUUID } from "../utils/crypto/crypto";
+import { TokenPayload, sign } from "../utils/token";
+import Role, { IRole } from "../model/mongo/role";
+import Resource, { IResource } from "../model/mongo/resource";
+import RedisService from "../utils/redis";
 class AuthService {
-  async login(body: LoginRequestBody) {
+  private redisService: typeof RedisService;
+  constructor() {
+    this.redisService = RedisService;
+  }
+  async login(
+    body: LoginRequestBody
+  ): Promise<{ token: string; expiresAt: number }> {
     try {
-      // 直接使用 Mongoose 模型查找用户
       const user = await Account.findOne({
         $or: [{ username: body.username }, { email: body.username }]
       });
 
-      if (!user)
-        throw ErrorFactory.business("用户不存在", "USER_NOT_FOUND", 404);
-
-      // 验证密码
-      const isValidPassword = await bcrypt.compare(
-        body.password,
-        user.password
-      );
-      if (!isValidPassword)
-        throw ErrorFactory.business("密码错误", "INVALID_PASSWORD", 401);
-
-      // 更新最后登录时间
-      await Account.findByIdAndUpdate(user._id, {
-        lastLoginAt: new Date()
-      });
-
-      // 返回格式匹配 schema 定义
-      return {
+      if (!user) throw ErrorFactory.business(t("auth.login.account_not_found"));
+      if (!user.validatePassword(body.password))
+        throw ErrorFactory.business(t("auth.login.invalid_password"));
+      const accessToken = generateUUID();
+      // // 更新最后登录时间
+      await user.updateLastLogin(accessToken);
+      const payload: TokenPayload = {
+        id: user.id,
         username: user.username,
-        password: user.password,
-        email: user.email
+        email: user.email,
+        role: user.roles
+      };
+      const { token, expiresAt } = sign(payload);
+      return {
+        token,
+        expiresAt
       };
     } catch (error: any) {
       throw ErrorFactory.business(error.message, error.code, error.details);
@@ -41,13 +45,12 @@ class AuthService {
   async register(body: RegisterRequestBody) {
     try {
       // 检查用户是否已存在
-      const existingUser = await Account.findOne({
-        $or: [{ username: body.username }, { email: body.email }]
-      });
+      const existingUser = await Account.findByUsername(body.username);
 
-      if (existingUser) {
-        throw ErrorFactory.business("用户名或邮箱已存在", "USER_EXISTS", 409);
-      }
+      if (existingUser)
+        throw ErrorFactory.validation(
+          t("auth.register.username_or_email_already_exists")
+        );
 
       // 直接使用 Mongoose 模型创建用户
       const account = await Account.create(body);
@@ -59,29 +62,256 @@ class AuthService {
         email: account.email
       };
     } catch (error: any) {
-      throw ErrorFactory.business(error.message, error.code, error.details);
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+  /**
+   * 获取所有用户
+   */
+  async getAllUsers(): Promise<IAccount[]> {
+    return await Account.find();
+  }
+
+  /**
+   * 重置密码
+   */
+  async resetPassword(
+    id: string,
+    newPassword?: string
+  ): Promise<{ message: string }> {
+    try {
+      const user = await Account.findById(id);
+      if (!user)
+        throw ErrorFactory.business(t("auth.reset_password.account_not_found"));
+
+      // 使用默认密码或提供的密码
+      const password = newPassword || "123456";
+
+      // 直接修改密码字段，中间件会自动加密
+      user.password = password;
+      await user.save();
+
+      return { message: t("auth.reset_password.success") };
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
     }
   }
 
-  // 示例：使用 Mongoose 模型
-  async getUserById(id: string) {
+  //---------------------------角色管理-----------------------------
+
+  /**
+   * 添加角色
+   */
+  async addRole(body: any): Promise<IRole> {
     try {
-      const user = await Account.findById(id);
+      const role = await Role.create(body);
+      return role;
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
 
-      if (!user) {
-        throw ErrorFactory.business("用户不存在", "USER_NOT_FOUND", 404);
-      }
+  /**
+   * 编辑角色
+   */
+  async editRole(id: string, body: any): Promise<IRole | null> {
+    try {
+      return await Role.findByIdAndUpdate(id, body);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
 
+  /**
+   * 删除角色
+   */
+  async deleteRole(id: string): Promise<IRole | null> {
+    try {
+      return await Role.softDelete(id);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 获取角色
+   */
+  async getRole(id: string): Promise<IRole | null> {
+    try {
+      return await Role.findById(id);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 获取所有角色
+   */
+  async getAllRoles(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: string;
+    order?: string;
+  }): Promise<{
+    role: IRole[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = "createdAt",
+        order = "desc"
+      } = query;
+      const skip = (page - 1) * limit;
+      const sortOrder = order === "asc" ? 1 : -1;
+      const sortObj: any = {};
+      sortObj[sort] = sortOrder;
+      const role = await Role.findAll(skip, limit, sortObj);
+      const total = await Role.countDocuments();
+      const totalPages = Math.ceil(total / limit);
       return {
-        username: user.username,
-        email: user.email,
-        createdAt: user.createdAt
+        role,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages
+        }
       };
     } catch (error: any) {
-      throw ErrorFactory.business(error.message, error.code, error.details);
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 增加资源
+   */
+  async addResource(body: any): Promise<IResource> {
+    try {
+      return await Resource.create(body);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 编辑资源
+   */
+  async editResource(id: string, body: any): Promise<IResource | null> {
+    try {
+      return await Resource.findByIdAndUpdate(id, body);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 删除资源
+   */
+  async deleteResource(id: string): Promise<IResource | null> {
+    try {
+      return await Resource.softDelete(id);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 获取资源
+   */
+  async getResource(id: string): Promise<IResource | null> {
+    try {
+      return await Resource.findById(id);
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 获取所有资源
+   */
+  async getAllResources(): Promise<IResource[]> {
+    try {
+      return await Resource.findAll();
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
+    }
+  }
+
+  /**
+   * 获取用户列表
+   */
+  async getUserList(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: string;
+    order?: string;
+    role?: string;
+  }) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        search,
+        sort = "createdAt",
+        order = "desc",
+        role
+      } = query;
+
+      // 构建查询条件
+      const filter: any = {};
+      if (search) {
+        filter.$or = [
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } }
+        ];
+      }
+
+      if (role) {
+        filter.roles = { $in: [role] };
+      }
+
+      // 构建排序条件
+      const sortOrder = order === "asc" ? 1 : -1;
+      const sortObj: any = {};
+      sortObj[sort] = sortOrder;
+
+      // 计算分页
+      const skip = (page - 1) * limit;
+      // 查询数据
+      const [users, total] = await Promise.all([
+        Account.find(filter)
+          .select("-password") // 排除密码字段
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Account.countDocuments(filter)
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages
+        }
+      };
+    } catch (error: any) {
+      throw ErrorFactory.validation(error.message);
     }
   }
 }
 
-// 导出工厂函数，需要传入 fastify 实例
 export default new AuthService();

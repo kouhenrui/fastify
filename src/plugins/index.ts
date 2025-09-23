@@ -2,21 +2,18 @@ import { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
-import jwt from "@fastify/jwt";
-import rateLimit from "@fastify/rate-limit";
-import helmet from "@fastify/helmet";
-import mongoosePlugin from "./dataBase/mongoose";
+// import helmet from "@fastify/helmet";
 import loggerPlugin from "./logger/logger";
 import responsePlugin from "./response/response";
-import redisPlugin from "./cache/redis";
-// import prismaPlugin from "./dataBase/prisma";
-// import typeormPlugin from "./dataBase/typeorm";
-// import mongoosePlugin from "./dataBase/mongoose";
 import logger from "../config/logger/logger";
 import { getCorsConfigByEnv } from "../utils/cors/cors";
 import { ErrorFactory } from "../utils/errors/custom-errors";
 import { KEY } from "../config/key";
-
+// import Redis from "ioredis";
+// import rateLimit from "@fastify/rate-limit";
+// import prismaPlugin from "./dataBase/prisma";
+// import typeormPlugin from "./dataBase/typeorm";
+import mongoosePlugin from "./dataBase/mongoose";
 // 插件注册函数
 async function registerPlugins(fastify: FastifyInstance) {
   // 第一步：强制注册日志和响应格式化插件，失败则启动失败
@@ -37,19 +34,6 @@ async function registerPlugins(fastify: FastifyInstance) {
     // 注册 CORS 插件 - 使用工具配置
     const corsConfig = getCorsConfigByEnv(KEY.nodeEnv);
     await fastify.register(cors, corsConfig);
-
-    // 注册 JWT 插件
-    await fastify.register(jwt, {
-      secret: KEY.secretKey
-    });
-
-    // 注册 Redis 插件
-    await fastify.register(redisPlugin, {
-      host: KEY.redisHost,
-      port: KEY.redisPort,
-      db: KEY.redisDb,
-      password: KEY.redisPassword
-    });
 
     // 注册 Swagger 插件
     await fastify.register(fastifySwagger, {
@@ -122,25 +106,34 @@ async function registerPlugins(fastify: FastifyInstance) {
       },
       transformSpecificationClone: true
     });
-    // 注册限流插件
-    await fastify.register(rateLimit, {
-      redis: fastify.redis,
-      max: 100, // 每分钟最多 100 个请求
-      timeWindow: "1 minute",
-      errorResponseBuilder(request, context) {
-        return {
-          code: 429,
-          error: "Too Many Requests",
-          message: `Rate limit exceeded, retry in ${Math.round(Number(context.after) / 1000)} seconds`,
-          retryAfter: Math.round(Number(context.after) / 1000)
-        };
-      }
-    });
+    // 创建用于限流的 Redis 实例
+    // const rateLimitRedis = new Redis({
+    //   host: KEY.redisHost,
+    //   port: KEY.redisPort,
+    //   db: KEY.redisDb,
+    //   ...(KEY.redisPassword && { password: KEY.redisPassword }),
+    //   ...(KEY.redisUsername && { username: KEY.redisUsername })
+    // });
+
+    // // 注册限流插件
+    // await fastify.register(rateLimit, {
+    //   redis: rateLimitRedis,
+    //   max: 100, // 每分钟最多 100 个请求
+    //   timeWindow: "1 minute",
+    //   errorResponseBuilder(request, context) {
+    //     return {
+    //       code: 429,
+    //       error: "Too Many Requests",
+    //       message: `Rate limit exceeded, retry in ${Math.round(Number(context.after) / 1000)} seconds`,
+    //       retryAfter: Math.round(Number(context.after) / 1000)
+    //     };
+    //   }
+    // });
 
     // 注册 Helmet 插件
-    await fastify.register(helmet, {
-      contentSecurityPolicy: false
-    });
+    // await fastify.register(helmet, {
+    //   contentSecurityPolicy: false
+    // });
 
     // 注册 Mongoose 插件
     await fastify.register(mongoosePlugin, {
@@ -153,23 +146,6 @@ async function registerPlugins(fastify: FastifyInstance) {
     // 注册 Prisma的pg 插件
     // await fastify.register(prismaPlugin, {autoInitialize: true});
 
-    // 注册 Mongoose 插件
-    // await fastify.register(mongoosePlugin, {
-    //   uri: KEY.mongodbUri
-    // });
-    // 日志输出已挂载的插件
-    logger.info("已挂载的插件:", {
-      plugins: [
-        "logger",
-        "cors",
-        "swagger",
-        "response",
-        "typeorm",
-        "prismaPg",
-        "mongoose",
-        "redis"
-      ]
-    });
   } catch (error: any) {
     // 使用已注册的日志系统记录错误
     logger.error("插件注册失败", {

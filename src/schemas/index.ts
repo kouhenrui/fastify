@@ -24,6 +24,91 @@ export const errorResponseSchema = {
   required: ["code", "message", "error", "timestamp"]
 };
 
+// 用户列表查询参数 schema
+export const userListQuerySchema = {
+  type: "object",
+  properties: {
+    page: { 
+      type: "number", 
+      minimum: 1, 
+      default: 1,
+      description: "页码"
+    },
+    limit: { 
+      type: "number", 
+      minimum: 1, 
+      maximum: 100, 
+      default: 10,
+      description: "每页数量"
+    },
+    search: { 
+      type: "string",
+      description: "搜索关键词"
+    },
+    sort: { 
+      type: "string", 
+      enum: ["username", "email", "createdAt", "updatedAt"],
+      default: "createdAt",
+      description: "排序字段"
+    },
+    order: { 
+      type: "string", 
+      enum: ["asc", "desc"], 
+      default: "desc",
+      description: "排序方向"
+    },
+    status: {
+      type: "string",
+      enum: ["active", "inactive", "all"],
+      default: "all",
+      description: "用户状态"
+    },
+    role: {
+      type: "string",
+      description: "用户角色"
+    }
+  }
+};
+
+// 用户列表响应 schema
+export const userListResponseSchema = {
+  type: "object",
+  properties: {
+    code: { type: "number" },
+    message: { type: "string" },
+    data: {
+      type: "object",
+      properties: {
+        users: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              username: { type: "string" },
+              email: { type: "string" },
+              status: { type: "string" },
+              roles: { type: "array", items: { type: "string" } },
+              createdAt: { type: "string" },
+              updatedAt: { type: "string" }
+            }
+          }
+        },
+        pagination: {
+          type: "object",
+          properties: {
+            page: { type: "number" },
+            limit: { type: "number" },
+            total: { type: "number" },
+            totalPages: { type: "number" }
+          }
+        }
+      }
+    },
+    timestamp: { type: "number" }
+  }
+};
+
 // 认证相关 schema
 export const loginRequestSchema = {
   type: "object",

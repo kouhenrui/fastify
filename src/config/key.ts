@@ -1,11 +1,12 @@
 export const KEY = {
   // 服务器配置
-  port: process.env.PORT || 3000,
+  port: parseInt(process.env.PORT || "3000"),
   nodeEnv: process.env.NODE_ENV || "development",
   serverName: process.env.SERVER_NAME || "fastify-app",
   secretKey: process.env.SECRET_KEY || "secret-key",
   apiVersion: process.env.API_VERSION || "v1",
-
+  language: process.env.LANGUAGE || "zh-CN",
+  expiresIn: parseInt(process.env.EXPIRES_IN || "24*60*60*1000"),
   // MongoDB 配置
   mongodbUri:
     process.env.MONGODB_URI ||
@@ -21,6 +22,8 @@ export const KEY = {
   redisPort: parseInt(process.env.REDIS_PORT || "6379"),
   redisPassword: process.env.REDIS_PASSWORD || "123456",
   redisDb: parseInt(process.env.REDIS_DB || "0"),
+  redisUsername: process.env.REDIS_USERNAME || "root",
+  redisOptions: process.env.REDIS_OPTIONS || {},
 
   // PostgreSQL 配置
   enablePostgres: process.env.ENABLE_POSTGRES || false,

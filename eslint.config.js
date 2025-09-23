@@ -1,17 +1,31 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
+import tseslintParser from "@typescript-eslint/parser";
+import tseslintPlugin from "@typescript-eslint/eslint-plugin";
 
-export default tseslint.config(
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+export default [
   {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "logs/**",
+      "*.log",
+      "coverage/**",
+      ".env*",
+      "pnpm-lock.yaml"
+    ]
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
+      parser: tseslintParser,
       parserOptions: {
         project: "./tsconfig.json",
         tsconfigRootDir: import.meta.dirname
       }
+    },
+    plugins: {
+      "@typescript-eslint": tseslintPlugin
     },
     rules: {
       // TypeScript 相关规则
@@ -55,15 +69,6 @@ export default tseslint.config(
           memberSyntaxSortOrder: ["none", "all", "multiple", "single"]
         }
       ]
-    },
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "logs/**",
-      "*.log",
-      "coverage/**",
-      ".env*",
-      "pnpm-lock.yaml"
-    ]
+    }
   }
-);
+];

@@ -1,0 +1,153 @@
+{
+  "common": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "reset": "Reset",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": {
+      "title": "User Login",
+      "username": "Username",
+      "password": "Password",
+      "email": "Email",
+      "remember": "Remember Me",
+      "forgot": "Forgot Password?",
+      "success": "Login successful",
+      "failed": "Login failed",
+      "invalid_credentials": "Invalid username or password",
+      "account_locked": "Account is locked",
+      "account_disabled": "Account is disabled"
+    },
+    "register": {
+      "title": "User Registration",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "success": "Registration successful",
+      "failed": "Registration failed",
+      "username_exists": "Username already exists",
+      "email_exists": "Email already exists",
+      "password_mismatch": "Passwords do not match",
+      "weak_password": "Password is too weak"
+    },
+    "logout": {
+      "success": "Logout successful",
+      "failed": "Logout failed"
+    },
+    "permission": {
+      "denied": "Permission denied",
+      "required": "Login required",
+      "expired": "Login expired",
+      "invalid_token": "Invalid access token"
+    }
+  },
+  "user": {
+    "profile": {
+      "title": "User Profile",
+      "username": "Username",
+      "email": "Email",
+      "avatar": "Avatar",
+      "department": "Department",
+      "level": "Level",
+      "location": "Location",
+      "roles": "Roles",
+      "last_login": "Last Login",
+      "created_at": "Created At",
+      "updated_at": "Updated At"
+    },
+    "management": {
+      "title": "User Management",
+      "add_user": "Add User",
+      "edit_user": "Edit User",
+      "delete_user": "Delete User",
+      "assign_role": "Assign Role",
+      "revoke_role": "Revoke Role",
+      "user_list": "User List",
+      "total_users": "Total Users: {{count}}",
+      "active_users": "Active Users: {{count}}"
+    }
+  },
+  "role": {
+    "management": {
+      "title": "Role Management",
+      "add_role": "Add Role",
+      "edit_role": "Edit Role",
+      "delete_role": "Delete Role",
+      "role_list": "Role List",
+      "assign_permission": "Assign Permission",
+      "revoke_permission": "Revoke Permission",
+      "role_name": "Role Name",
+      "role_code": "Role Code",
+      "description": "Description",
+      "level": "Level",
+      "permissions": "Permissions"
+    }
+  },
+  "resource": {
+    "management": {
+      "title": "Resource Management",
+      "add_resource": "Add Resource",
+      "edit_resource": "Edit Resource",
+      "delete_resource": "Delete Resource",
+      "resource_list": "Resource List",
+      "resource_name": "Resource Name",
+      "resource_code": "Resource Code",
+      "resource_type": "Resource Type",
+      "path": "Path",
+      "method": "Method",
+      "description": "Description"
+    }
+  },
+  "permission": {
+    "management": {
+      "title": "Permission Management",
+      "check_permission": "Check Permission",
+      "grant_permission": "Grant Permission",
+      "revoke_permission": "Revoke Permission",
+      "permission_denied": "Permission denied",
+      "access_denied": "Access denied",
+      "insufficient_privileges": "Insufficient privileges to perform this action"
+    }
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "min_length": "{{field}} must be at least {{min}} characters",
+    "max_length": "{{field}} must not exceed {{max}} characters",
+    "email_format": "Invalid email format",
+    "password_strength": "Password must contain uppercase, lowercase, numbers and special characters",
+    "username_format": "Username can only contain letters, numbers and underscores",
+    "unique": "{{field}} already exists",
+    "not_found": "{{field}} not found",
+    "invalid_format": "Invalid {{field}} format"
+  },
+  "error": {
+    "server_error": "Internal server error",
+    "network_error": "Network connection error",
+    "timeout": "Request timeout",
+    "not_found": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "bad_request": "Bad request parameters",
+    "conflict": "Resource conflict",
+    "too_many_requests": "Too many requests"
+  }
+}

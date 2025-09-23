@@ -1,11 +1,12 @@
-import TypeORMAdapter from "typeorm-adapter";
 import { Enforcer, newEnforcer } from "casbin";
 import { FastifyReply, FastifyRequest } from "fastify";
 import path from "path";
 import fs from "fs";
+import TypeORMAdapter from "typeorm-adapter";
 import { KEY } from "../key";
 import { ErrorFactory } from "../../utils/errors/custom-errors";
 import logger from "../logger/logger";
+import ABAC_INIT_DATA from "./abac-data";
 
 // 权限检查结果
 export interface PermissionResult {
@@ -20,23 +21,22 @@ export interface RequestContext {
   obj: string; // 对象 (资源)
   act: string; // 动作
   env?: string; // 环境
+  eft?: string; // 效果
 }
 
-export class ORMManager {
-  private enforcer: Enforcer | null = null;
-  private pgAdapter: TypeORMAdapter | null = null;
-  private mongoAdapter: TypeORMAdapter | null = null;
-  private useMongoDB: boolean = false;
+class ORMManager {
+  private enforcer: Enforcer;
+  private typeormAdapter: any = null;
+  private useMongoDB: boolean = true;
   private modelPath: string;
   private isInitialized: boolean = false;
 
-  constructor(useMongoDB: boolean = false, modelPath?: string) {
-    this.useMongoDB = useMongoDB;
-    this.modelPath = modelPath || path.join(process.cwd(), "model.conf");
+  constructor() {
+    this.modelPath = path.join(process.cwd(), "model.conf");
   }
 
   /**
-   * 初始化管理器
+   * 异步初始化管理器
    */
   async initialize(): Promise<void> {
     try {
@@ -50,18 +50,12 @@ export class ORMManager {
         throw ErrorFactory.configuration("模型文件验证失败");
 
       if (this.useMongoDB) {
-        this.mongoAdapter = await TypeORMAdapter.newAdapter({
+        this.typeormAdapter = await TypeORMAdapter.default.newAdapter({
           type: "mongodb",
-          host: KEY.mongodbHost,
-          port: KEY.mongodbPort,
-          username: KEY.mongodbUser,
-          password: KEY.mongodbPassword,
-          database: KEY.mongodbCasbinDatabase,
-          synchronize: true,
-          logging: true
+          url: KEY.mongodbUri
         });
       } else {
-        this.pgAdapter = await TypeORMAdapter.newAdapter({
+        this.typeormAdapter = await TypeORMAdapter.default.newAdapter({
           type: "postgres",
           host: KEY.postgresHost,
           port: KEY.postgresPort,
@@ -69,21 +63,21 @@ export class ORMManager {
           password: KEY.postgresPassword,
           database: KEY.postgresCasbinDatabase,
           synchronize: true,
-          logging: true
+          logging: false
         });
       }
 
-      this.enforcer = await newEnforcer(
-        this.modelPath,
-        this.useMongoDB ? this.mongoAdapter : this.pgAdapter
-      );
+      this.enforcer = await newEnforcer(this.modelPath, this.typeormAdapter);
 
       // 启用自动保存
       this.enforcer.enableAutoSave(true);
 
       this.isInitialized = true;
     } catch (error: any) {
-      throw ErrorFactory.configuration("ORMManager 初始化失败", error.message);
+      logger.error("ORMManager 初始化失败:", error);
+      throw ErrorFactory.configuration(
+        `ORMManager 初始化失败: ${error.message}`
+      );
     }
   }
 
@@ -98,7 +92,8 @@ export class ORMManager {
         context.sub,
         context.obj,
         context.act,
-        context.env || ""
+        context.env,
+        context.eft
       );
 
       return { allowed, reason: allowed ? "权限检查通过" : "权限检查失败" };
@@ -212,17 +207,17 @@ export class ORMManager {
   /**
    * 添加策略
    */
-  async addPolicy(rule: string[]): Promise<void> {
+  async addPolicy(rule: string[]): Promise<boolean> {
     if (!this.enforcer) throw ErrorFactory.configuration("Enforcer 未初始化");
-    await this.enforcer.addPolicy(...rule);
+    return await this.enforcer.addPolicy(...rule);
   }
 
   /**
    * 移除策略
    */
-  async removePolicy(rule: string[]): Promise<void> {
+  async removePolicy(rule: string[]): Promise<boolean> {
     if (!this.enforcer) throw ErrorFactory.configuration("Enforcer 未初始化");
-    await this.enforcer.removePolicy(...rule);
+    return await this.enforcer.removePolicy(...rule);
   }
 
   /**
@@ -270,6 +265,21 @@ export class ORMManager {
   }
 
   /**
+   * 删除用户
+   */
+  async deleteUser(user: string): Promise<boolean> {
+    if (!this.enforcer) throw ErrorFactory.configuration("Enforcer 未初始化");
+    return await this.enforcer.deleteUser(user);
+  }
+  /**
+   * 删除角色
+   */
+  async deleteRole(role: string): Promise<boolean> {
+    if (!this.enforcer) throw ErrorFactory.configuration("Enforcer 未初始化");
+    return await this.enforcer.deleteRole(role);
+  }
+
+  /**
    * 验证模型配置
    */
   private validateModel(): boolean {
@@ -304,4 +314,16 @@ export class ORMManager {
   isReady(): boolean {
     return this.isInitialized && this.enforcer !== null;
   }
+}
+// 创建单例实例
+const ormManager = new ORMManager();
+
+// 导出实例和初始化方法
+export default ormManager;
+
+// 导出初始化方法，供应用启动时调用
+export async function initializeORMManager(): Promise<void> {
+  await ormManager.initialize();
+  if (!(await ormManager.checkPermission(ABAC_INIT_DATA.defaultPolicy)))
+    await ormManager.addPolicies(ABAC_INIT_DATA.policies);
 }

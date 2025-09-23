@@ -2,9 +2,9 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { LoginRequestBody, RegisterRequestBody } from "../utils/do/auth";
 import authService from "../service/auth.service";
 import { ErrorFactory } from "../utils/errors/custom-errors";
+import t from "../utils/i18n";
 
 class AuthController {
-
   /**
    * 用户登录
    * @param {LoginRequestBody} body请求参数
@@ -18,7 +18,7 @@ class AuthController {
     try {
       const body = request.body;
       const result = await authService.login(body);
-      return reply.success(result, "登录成功");
+      return reply.success(result, t("auth.login.success"));
     } catch (error: any) {
       throw ErrorFactory.business(error.message, error.code, error.details);
     }
@@ -34,12 +34,39 @@ class AuthController {
     try {
       const body = request.body;
       const result = await authService.register(body);
-      return reply.success(result, "注册成功");
+      return reply.success(result, t("auth.register.success"));
     } catch (error: any) {
       throw ErrorFactory.business(error.message, error.code, error.details);
     }
   };
+
+  /**
+   * 获取用户列表
+   */
+  getUserList = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const query = request.query as any;
+      const result = await authService.getUserList(query);
+      return reply.success(result, t("auth.user.list.success"));
+    } catch (error: any) {
+      throw ErrorFactory.business(error.message, error.code, error.details);
+    }
+  };
+
+  /**
+   * 获取角色列表
+   */
+  getRoleList = async (request: FastifyRequest, reply: FastifyReply) => {
+    const result = await authService.getAllRoles(request.query as any);
+    return reply.success(result, t("auth.role.list.success"));
+  };
+  getRole = async (
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    const result = await authService.getRole(request.params.id);
+    return reply.success(result, t("auth.role.get.success"));
+  };
 }
 
-// 导出工厂函数，需要传入 fastify 实例
 export default new AuthController();

@@ -1,42 +1,34 @@
-import "reflect-metadata";
-import Fastify from "fastify";
 import process from "process";
-import dotenv from "dotenv";
 import { logger } from "./src/config/logger/logger";
-import registerPlugins from "./src/plugins/index";
-import router from "./src/route/router";
-
-// 加载环境变量
-dotenv.config();
-
-const fastify = Fastify({
-  logger: false
-});
+import { createApp } from "./app";
+import { KEY } from "./src/config/key";
 
 // 启动服务器
 async function start() {
   try {
-    // 注册插件（日志系统必须成功）
-    await registerPlugins(fastify);
-    // 注册路由
-    router(fastify);
+    // 创建应用实例
+    const fastify = await createApp();
 
-    const port = parseInt(process.env.PORT || "3000");
+    const port = KEY.port;
     fastify.listen({ port, host: "0.0.0.0" }, (err, address) => {
       if (err) {
         logger.error("❌ 服务器启动失败", {
           error: err.message,
           stack: err.stack
         });
+        process.exit(1);
       }
       logger.info("🎉 服务器启动成功", {
         address,
         bindTo: "0.0.0.0",
-        environment: process.env.NODE_ENV,
+        environment: KEY.nodeEnv,
         nodeVersion: process.version,
         uptime: process.uptime()
       });
     });
+
+    // 设置全局 fastify 实例引用，用于优雅关闭
+    (global as any).fastify = fastify;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
 
@@ -51,14 +43,20 @@ async function start() {
 // 优雅关闭
 process.on("SIGINT", async () => {
   logger.info("收到 SIGINT 信号，正在关闭服务器...");
-  await fastify.close();
+  const fastify = (global as any).fastify;
+  if (fastify) {
+    await fastify.close();
+  }
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   logger.info("收到 SIGTERM 信号，正在关闭服务器...");
-  await fastify.close();
+  const fastify = (global as any).fastify;
+  if (fastify) {
+    await fastify.close();
+  }
   process.exit(0);
 });
 
-start();
+await start();

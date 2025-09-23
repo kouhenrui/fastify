@@ -33,7 +33,7 @@ export class CustomError extends Error {
 // 业务逻辑错误
 class BusinessError extends CustomError {
   constructor(message: string, code: string = "BUSINESS_ERROR", details?: any) {
-    super(message, 400, code, details);
+    super(message, 666, code, details);
   }
 }
 
