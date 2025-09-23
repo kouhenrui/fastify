@@ -7,6 +7,7 @@ import Role from "./role";
 import Account from "./account";
 import ABAC_INIT_DATA from "../../config/casbin/abac-data";
 import logger from "../../utils/logger/logger";
+import Resource from "./resource";
 
 export interface IBaseModel extends Document {
   _id: string; // 主键
@@ -60,40 +61,42 @@ export async function initializeBaseData() {
     logger.info("🔄 开始初始化基础数据...");
 
     // 并行检查数据是否存在
-    const [role, existing] = await Promise.all([
+    const [role, account, resource] = await Promise.all([
       Role.countDocuments(),
-      Account.countDocuments()
+      Account.countDocuments(),
+      Resource.countDocuments()
     ]);
 
     logger.info(`📊 现有角色数量: ${role}`);
-    logger.info(`📊 现有账户数量: ${existing}`);
+    logger.info(`📊 现有账户数量: ${account}`);
+    logger.info(`📊 现有资源数量: ${resource}`);
 
     // 并行创建数据
     const promises = [];
 
     // 创建角色数据
-    if (role === 0) {
-      logger.info("📝 创建角色数据...");
+    if (role === 0)
       promises.push(
         Role.insertMany(ABAC_INIT_DATA.roles).then(() => {
           logger.info("✅ 角色数据创建完成");
         })
       );
-    } else {
-      logger.info("ℹ️ 角色数据已存在，跳过创建");
-    }
 
     // 创建默认管理员账户
-    if (existing === 0) {
-      logger.info("📝 创建默认管理员账户...");
+    if (account === 0)
       promises.push(
         Account.create(ABAC_INIT_DATA.defaultAdmin).then(() => {
           logger.info("✅ 默认管理员账户创建完成");
         })
       );
-    } else {
-      logger.info("ℹ️ 管理员账户已存在，跳过创建");
-    }
+
+    // 创建资源数据
+    if (resource === 0)
+      promises.push(
+        Resource.insertMany(ABAC_INIT_DATA.resources).then(() => {
+          logger.info("✅ 资源数据创建完成");
+        })
+      );
 
     // 等待所有创建操作完成
     if (promises.length > 0) {

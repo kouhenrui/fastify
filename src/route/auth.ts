@@ -24,38 +24,38 @@ export default async function authRoutes(auth: FastifyInstance) {
   );
 
   // 用户注册
-  // auth.post(
-  //   "/register",
-  //   {
-  //     schema: {
-  //       tags: ["认证"],
-  //       summary: "用户注册",
-  //       description: "创建新用户账户",
-  //       body: registerRequestSchema,
-  //       response: {
-  //         200: authResponseSchema
-  //       }
-  //     }
-  //   },
-  //   authController.register
-  // );
+  auth.post(
+    "/register",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "用户注册",
+        description: "创建新用户账户",
+        body: registerRequestSchema,
+        response: {
+          200: authResponseSchema
+        }
+      }
+    },
+    authController.register
+  );
 
-  // // 获取用户列表
-  // auth.get(
-  //   "/users",
-  //   {
-  //     schema: {
-  //       tags: ["用户管理"],
-  //       summary: "获取用户列表",
-  //       description: "分页获取用户列表，支持搜索、排序和过滤",
-  //       querystring: userListQuerySchema,
-  //       response: {
-  //         200: userListResponseSchema
-  //       }
-  //     }
-  //   },
-  //   authController.getUserList
-  // );
+  // 获取用户列表
+  auth.get(
+    "/users",
+    {
+      schema: {
+        tags: ["用户管理"],
+        summary: "获取用户列表",
+        description: "分页获取用户列表，支持搜索、排序和过滤",
+        querystring: userListQuerySchema,
+        response: {
+          200: userListResponseSchema
+        }
+      }
+    },
+    authController.getUserList
+  );
 
-  // auth.get("/role/list", authController.getRoleList);
+  auth.get("/role/list", authController.getRoleList);
 }
