@@ -1,6 +1,6 @@
 import mongoose, { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
-import { IBaseModel, createBaseSchema } from ".";
+import { IBaseModel, createSchema } from ".";
 // 账户接口
 export interface IAccount extends IBaseModel {
   username: string; // 用户名
@@ -13,17 +13,17 @@ export interface IAccount extends IBaseModel {
   location?: string; // 地理位置
   roles: string[]; // 角色数组
   lastLoginAt?: Date; // 最后登录时间
-  // 实例方法
-  toSafeObject(): Promise<IAccount>;
-  updateLastLogin(accessToken: string): Promise<IAccount>;
+
   validatePassword(password: string): Promise<boolean>;
+  updateLastLogin(accessToken: string): Promise<IAccount>;
   addRole(roleCode: string): Promise<IAccount>;
   removeRole(roleCode: string): Promise<IAccount>;
   hasRole(roleCode: string): boolean;
+  toSafeObject(): any;
 }
 
 // 账户 Schema
-const accountSchema = createBaseSchema<IAccount>(
+const accountSchema = createSchema<IAccount>(
   {
     username: {
       type: String,
@@ -82,18 +82,24 @@ const accountSchema = createBaseSchema<IAccount>(
       default: null
     }
   },
-  {
-    collection: "accounts"
-  }
+  "accounts"
 );
 
-// Account 特定索引
-accountSchema.index({ username: 1, email: 1 });
-accountSchema.index({ roles: 1 });
-accountSchema.index({ department: 1 });
-accountSchema.index({ level: 1 });
+// 添加基础索引（异步创建，避免阻塞）
+// accountSchema.index({ isActive: 1, deletedAt: 1 }, { background: true });
+// accountSchema.index({ createdAt: -1 }, { background: true });
+// accountSchema.index({ updatedAt: -1 }, { background: true });
 
-// 基础虚拟字段已在工厂函数中添加
+// // Account 特定索引（异步创建，避免阻塞）
+// accountSchema.index({ username: 1, email: 1 }, { background: true });
+// accountSchema.index({ roles: 1 }, { background: true });
+// accountSchema.index({ department: 1 }, { background: true });
+// accountSchema.index({ level: 1 }, { background: true });
+
+// 添加基础虚拟字段
+accountSchema.virtual("isDeleted").get(function (this: any) {
+  return this.deletedAt !== null;
+});
 
 // 实例方法
 accountSchema.methods.toSafeObject = function () {
@@ -149,8 +155,6 @@ accountSchema.statics.findByDepartment = function (department: string) {
   return this.find({ department, isActive: true, deletedAt: null });
 };
 
-// 基础软删除方法已在工厂函数中添加
-
 // 中间件
 accountSchema.pre("save", async function (next) {
   // 确保邮箱是小写
@@ -166,8 +170,6 @@ accountSchema.pre("save", async function (next) {
   next();
 });
 
-// 基础 pre 钩子已在工厂函数中添加
-
 // 静态方法接口
 interface IAccountModel extends Model<IAccount> {
   findActiveUsers(): Promise<IAccount[]>;
@@ -175,7 +177,6 @@ interface IAccountModel extends Model<IAccount> {
   findByUsername(username: string): Promise<IAccount | null>;
   findByRole(roleCode: string): Promise<IAccount[]>;
   findByDepartment(department: string): Promise<IAccount[]>;
-  softDelete(id: string, deletedBy?: string): Promise<IAccount | null>;
 }
 
 // 创建模型

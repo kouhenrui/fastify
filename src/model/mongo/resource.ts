@@ -1,5 +1,5 @@
 import mongoose, { Model } from "mongoose";
-import { IBaseModel, createBaseSchema } from ".";
+import { IBaseModel, createSchema } from ".";
 
 export interface IResource extends IBaseModel {
   name: string; // 资源名称
@@ -10,18 +10,19 @@ export interface IResource extends IBaseModel {
 }
 
 // 使用工厂函数创建 schema
-const resourceSchema = createBaseSchema<IResource>({
-  name: { type: String, required: true },
-  code: { type: String, required: true },
-  type: { type: String, required: true },
-  path: { type: String, required: true },
-  method: { type: String, required: true }
-}, {
-  collection: "resources"
-});
+const resourceSchema = createSchema<IResource>(
+  {
+    name: { type: String, required: true },
+    code: { type: String, required: true },
+    type: { type: String, required: true },
+    path: { type: String, required: true },
+    method: { type: String, required: true }
+  },
+  "resources"
+);
 
-// Resource 特定索引
-resourceSchema.index({ code: 1, isActive: 1, deletedAt: 1 });
+// Resource 特定索引（异步创建，避免阻塞）
+// resourceSchema.index({ code: 1, isActive: 1, deletedAt: 1 }, { background: true });
 
 resourceSchema.statics.findByCode = function (code: string) {
   return this.findOne({ code, isActive: true, deletedAt: null });
@@ -40,7 +41,6 @@ interface IResourceModel extends Model<IResource> {
   findByCode(code: string): Promise<IResource | null>;
   findByType(type: string): Promise<IResource[]>;
   findAll(): Promise<IResource[]>;
-  softDelete(id: string, deletedBy?: string): Promise<IResource | null>;
 }
 
 const Resource: IResourceModel = mongoose.model<IResource, IResourceModel>(

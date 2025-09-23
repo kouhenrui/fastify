@@ -4,93 +4,52 @@
 
 import { Document, Schema } from "mongoose";
 import Role from "./role";
-import Resource from "./resource";
 import Account from "./account";
 import ABAC_INIT_DATA from "../../config/casbin/abac-data";
 import logger from "../../utils/logger/logger";
 
 export interface IBaseModel extends Document {
   _id: string; // 主键
-  extra?: Record<string, any>; // 额外字段
   deletedAt?: Date; // 删除时间
   deletedBy?: string; // 删除者
   createdAt: Date; // 创建时间
   updatedAt: Date; // 更新时间
   isActive: boolean; // 是否激活
+
+  // 软删除方法
+  softDelete(userId?: string): Promise<IBaseModel>;
 }
 
-// 基础字段定义
-export const baseFields = {
-  extra: {
-    type: Schema.Types.Mixed,
-    default: null
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  deletedAt: {
-    type: Date,
-    default: null
-  },
-  deletedBy: {
-    type: String,
-    default: null
-  }
-};
+// 公共基础字段
+function getBaseFields() {
+  return {
+    isActive: { type: Boolean, default: true },
+    deletedAt: { type: Date, default: null },
+    deletedBy: { type: String, default: null },
+    extra: { type: Schema.Types.Mixed, default: null }
+  };
+}
 
-// 基础选项
-export const baseOptions = {
-  timestamps: true,
-  versionKey: false
-};
+// 创建 schema 工厂函数
+export function createSchema<T>(specificFields: any, collection: string) {
+  const fields = Object.assign({}, specificFields, getBaseFields());
 
-// 创建基础 Schema 的工厂函数
-export function createBaseSchema<T>(specificFields: any, options: any = {}) {
-  const schema = new Schema<T>(
-    {
-      ...specificFields,
-      ...baseFields
-    },
-    {
-      ...baseOptions,
-      ...options
-    }
-  );
-
-  // 添加基础索引
-  schema.index({ isActive: 1, deletedAt: 1 });
-  schema.index({ createdAt: -1 });
-  schema.index({ updatedAt: -1 });
-
-  // 添加基础虚拟字段
-  schema.virtual("isDeleted").get(function (this: any) {
-    return this.deletedAt !== null;
+  const schema = new Schema<T>(fields, {
+    timestamps: true,
+    versionKey: false,
+    collection
   });
-
-  // 添加基础方法
-  schema.methods.toSafeObject = function () {
-    const obj = this.toObject();
-    return obj;
+  schema.methods.softDelete = async function (userId?: string) {
+    this.deletedAt = new Date();
+    this.deletedBy = userId || null;
+    return this.save();
   };
-
-  // 添加基础静态方法
-  schema.statics.softDelete = function (id: string, deletedBy?: string) {
-    return this.findByIdAndUpdate(id, {
-      deletedAt: new Date(),
-      deletedBy: deletedBy || "system"
-    });
-  };
-
-  // 添加基础 pre 钩子
   schema.pre("findOne", function () {
     this.where({ deletedAt: null });
   });
-
   schema.pre("find", function () {
     this.where({ deletedAt: null });
   });
-
   return schema;
 }
 /**
@@ -98,21 +57,55 @@ export function createBaseSchema<T>(specificFields: any, options: any = {}) {
  */
 export async function initializeBaseData() {
   try {
-    // 检查并初始化角色数据
-    const existingRoles = await Role.countDocuments();
-    if (existingRoles === 0) await Role.create(ABAC_INIT_DATA.roles);
+    logger.info("🔄 开始初始化基础数据...");
 
-    // 检查并初始化资源数据
-    const existingResources = await Resource.countDocuments();
-    if (existingResources === 0)
-      await Resource.create(ABAC_INIT_DATA.resources);
+    // 并行检查数据是否存在
+    const [role, existing] = await Promise.all([
+      Role.countDocuments(),
+      Account.countDocuments()
+    ]);
 
-    // 检查并创建默认管理员账户
-    const existingAdmin = await Account.findOne({ username: "admin" });
-    if (!existingAdmin) await Account.create(ABAC_INIT_DATA.defaultAdmin);
+    logger.info(`📊 现有角色数量: ${role}`);
+    logger.info(`📊 现有账户数量: ${existing}`);
+
+    // 并行创建数据
+    const promises = [];
+
+    // 创建角色数据
+    if (role === 0) {
+      logger.info("📝 创建角色数据...");
+      promises.push(
+        Role.insertMany(ABAC_INIT_DATA.roles).then(() => {
+          logger.info("✅ 角色数据创建完成");
+        })
+      );
+    } else {
+      logger.info("ℹ️ 角色数据已存在，跳过创建");
+    }
+
+    // 创建默认管理员账户
+    if (existing === 0) {
+      logger.info("📝 创建默认管理员账户...");
+      promises.push(
+        Account.create(ABAC_INIT_DATA.defaultAdmin).then(() => {
+          logger.info("✅ 默认管理员账户创建完成");
+        })
+      );
+    } else {
+      logger.info("ℹ️ 管理员账户已存在，跳过创建");
+    }
+
+    // 等待所有创建操作完成
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+
+    logger.info("🎉 基础数据初始化完成");
   } catch (error: any) {
-    logger.error("初始化基础数据失败", {
-      error: error.message
+    logger.error("❌ 初始化基础数据失败", {
+      error: error.message,
+      stack: error.stack
     });
+    throw error; // 重新抛出错误，让调用者知道失败
   }
 }

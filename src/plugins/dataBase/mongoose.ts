@@ -47,7 +47,16 @@ const mongoosePlugin: FastifyPluginAsync<MongooseOptions> = async (
       logger.warn("⚠️ MongoDB 连接断开");
     });
 
-    await initializeBaseData();
+    // 异步初始化基础数据，不阻塞应用启动
+
+    try {
+      await initializeBaseData();
+      logger.info("✅ 基础数据初始化完成");
+    } catch (error: any) {
+      logger.warn("⚠️ 基础数据初始化失败，但应用继续运行", {
+        error: error.message
+      });
+    }
   } catch (error: any) {
     logger.error("MongoDB Mongoose 插件注册失败", {
       error: error.message

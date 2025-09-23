@@ -217,7 +217,9 @@ class AuthService {
    */
   async deleteResource(id: string): Promise<IResource | null> {
     try {
-      return await Resource.softDelete(id);
+      return await Resource.findByIdAndUpdate(id, {
+        isActive: false
+      });
     } catch (error: any) {
       throw ErrorFactory.validation(error.message);
     }

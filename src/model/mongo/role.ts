@@ -1,5 +1,5 @@
 import mongoose, { Model } from "mongoose";
-import { IBaseModel, createBaseSchema } from ".";
+import { IBaseModel, createSchema } from ".";
 
 export interface IRole extends IBaseModel {
   name: string; // 角色名称
@@ -9,17 +9,18 @@ export interface IRole extends IBaseModel {
 }
 
 // 使用工厂函数创建 schema
-const roleSchema = createBaseSchema<IRole>({
-  name: { type: String, required: true },
-  description: { type: String, default: null },
-  code: { type: String, required: true },
-  level: { type: Number, default: 1 }
-}, {
-  collection: "roles"
-});
+const roleSchema = createSchema<IRole>(
+  {
+    name: { type: String, required: true },
+    description: { type: String, default: null },
+    code: { type: String, required: true },
+    level: { type: Number, default: 1 }
+  },
+  "role"
+);
 
-// Role 特定索引
-roleSchema.index({ code: 1, isActive: 1, deletedAt: 1 });
+// Role 特定索引（异步创建，避免阻塞）
+roleSchema.index({ code: 1, isActive: 1, deletedAt: 1 }, { background: true });
 
 roleSchema.statics.findByCode = function (code: string) {
   return this.findOne({ code, isActive: true, deletedAt: null });
@@ -43,10 +44,6 @@ roleSchema.statics.frozeRole = function (id: string) {
   });
 };
 
-// 基础软删除方法已在工厂函数中添加
-
-// 基础 pre 钩子已在工厂函数中添加
-
 // 静态方法接口
 interface IRoleModel extends Model<IRole> {
   findByCode(code: string): Promise<IRole | null>;
@@ -56,6 +53,6 @@ interface IRoleModel extends Model<IRole> {
   softDelete(id: string, deletedBy?: string): Promise<IRole | null>;
 }
 
-const Role: IRoleModel = mongoose.model<IRole, IRoleModel>("Role", roleSchema);
+const Role: IRoleModel = mongoose.model<IRole, IRoleModel>("role", roleSchema);
 
 export default Role;
