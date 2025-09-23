@@ -7,6 +7,7 @@ import { TokenPayload, sign } from "../utils/token";
 import Role, { IRole } from "../model/mongo/role";
 import Resource, { IResource } from "../model/mongo/resource";
 import RedisService from "../utils/redis";
+import { KEY } from "../config/key";
 class AuthService {
   private redisService: typeof RedisService;
   constructor() {
@@ -23,20 +24,36 @@ class AuthService {
       if (!user) throw ErrorFactory.business(t("auth.login.account_not_found"));
       if (!user.validatePassword(body.password))
         throw ErrorFactory.business(t("auth.login.invalid_password"));
-      const accessToken = generateUUID();
-      // // 更新最后登录时间
-      await user.updateLastLogin(accessToken);
-      const payload: TokenPayload = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.roles
-      };
-      const { token, expiresAt } = sign(payload);
-      return {
-        token,
-        expiresAt
-      };
+      // 检查accessToken是否存在且有效
+      if (
+        user.accessToken &&
+        (await this.redisService.exists(user.accessToken))
+      ) {
+        const tokenCache = await this.redisService.get(user.accessToken);
+        return {
+          token: tokenCache.token,
+          expiresAt: tokenCache.expiresAt
+        };
+      } else {
+        const accessToken = generateUUID();
+        const payload: TokenPayload = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.roles
+        };
+        const { token, expiresAt } = sign(payload); // 更新最后登录时间
+        await user.updateLastLogin(accessToken);
+        await this.redisService.set(
+          accessToken,
+          { token, expiresAt },
+          KEY.expiresIn
+        );
+        return {
+          token,
+          expiresAt
+        };
+      }
     } catch (error: any) {
       throw ErrorFactory.business(error.message, error.code, error.details);
     }
