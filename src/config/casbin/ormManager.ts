@@ -50,12 +50,12 @@ class ORMManager {
         throw ErrorFactory.configuration("模型文件验证失败");
 
       if (this.useMongoDB) {
-        this.typeormAdapter = await TypeORMAdapter.default.newAdapter({
+        this.typeormAdapter = await (TypeORMAdapter as any).default.newAdapter({
           type: "mongodb",
           url: KEY.mongodbUri
         });
       } else {
-        this.typeormAdapter = await TypeORMAdapter.default.newAdapter({
+        this.typeormAdapter = await (TypeORMAdapter as any).default.newAdapter({
           type: "postgres",
           host: KEY.postgresHost,
           port: KEY.postgresPort,
