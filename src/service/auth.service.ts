@@ -110,7 +110,11 @@ class AuthService {
 
       // 使用默认密码或提供的密码
       const password = newPassword || "123456";
-
+      if (user.accessToken) {
+        user.accessToken = "";
+        if (await this.redisService.exists(user.accessToken))
+          await this.redisService.del(user.accessToken);
+      }
       // 直接修改密码字段，中间件会自动加密
       user.password = password;
       await user.save();
