@@ -68,16 +68,8 @@ class AuthService {
         throw ErrorFactory.validation(
           t("auth.register.username_or_email_already_exists")
         );
-      const roles = await this.getAllRoles({
-        sort: "createdAt",
-        order: "desc"
-      });
-      const insetData = {
-        ...body,
-        roles: roles.role.map(role => role.id)
-      };
       // 直接使用 Mongoose 模型创建用户
-      const account = await Account.create(insetData);
+      const account = await Account.create(body);
 
       // 返回格式匹配 schema 定义
       return {

@@ -239,6 +239,10 @@ const responsePlugin: FastifyPluginAsync<ResponseOptions> = async (
         requestId
       );
     }
+    if (error.statusCode === 400) {
+      return ResponseHelper.validationError(reply, error.message, requestId);
+    }
+
     // 未知错误
     return ResponseHelper.internalError(
       reply,

@@ -58,5 +58,18 @@ process.on("SIGTERM", async () => {
   }
   process.exit(0);
 });
-
+process.on("uncaughtException", (err: any) => {
+  logger.error("❌ 未捕获的异常", {
+    error: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
+});
+process.on("unhandledRejection", (err: any) => {
+  logger.error("❌ 未处理的拒绝", {
+    error: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
+});
 await start();

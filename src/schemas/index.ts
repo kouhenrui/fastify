@@ -28,32 +28,30 @@ export const errorResponseSchema = {
 export const userListQuerySchema = {
   type: "object",
   properties: {
-    page: { 
-      type: "number", 
-      minimum: 1, 
+    page: {
+      type: "number",
       default: 1,
       description: "页码"
     },
-    limit: { 
-      type: "number", 
-      minimum: 1, 
-      maximum: 100, 
+    limit: {
+      type: "number",
+      maximum: 100,
       default: 10,
       description: "每页数量"
     },
-    search: { 
+    search: {
       type: "string",
       description: "搜索关键词"
     },
-    sort: { 
-      type: "string", 
+    sort: {
+      type: "string",
       enum: ["username", "email", "createdAt", "updatedAt"],
       default: "createdAt",
       description: "排序字段"
     },
-    order: { 
-      type: "string", 
-      enum: ["asc", "desc"], 
+    order: {
+      type: "string",
+      enum: ["asc", "desc"],
       default: "desc",
       description: "排序方向"
     },

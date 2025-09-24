@@ -58,8 +58,6 @@ export function createSchema<T>(specificFields: any, collection: string) {
  */
 export async function initializeBaseData() {
   try {
-    logger.info("🔄 开始初始化基础数据...");
-
     // 并行检查数据是否存在
     const [role, account, resource] = await Promise.all([
       Role.countDocuments(),
@@ -102,8 +100,6 @@ export async function initializeBaseData() {
     if (promises.length > 0) {
       await Promise.all(promises);
     }
-
-    logger.info("🎉 基础数据初始化完成");
   } catch (error: any) {
     logger.error("❌ 初始化基础数据失败", {
       error: error.message,

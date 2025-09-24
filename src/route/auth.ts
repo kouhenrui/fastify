@@ -45,7 +45,7 @@ export default async function authRoutes(auth: FastifyInstance) {
     "/users",
     {
       schema: {
-        tags: ["用户管理"],
+        tags: ["认证"],
         summary: "获取用户列表",
         description: "分页获取用户列表，支持搜索、排序和过滤",
         querystring: userListQuerySchema,
@@ -57,5 +57,15 @@ export default async function authRoutes(auth: FastifyInstance) {
     authController.getUserList
   );
 
-  auth.get("/role/list", authController.getRoleList);
+  auth.get(
+    "/role/list",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "获取角色列表",
+        description: "获取角色列表"
+      }
+    },
+    authController.getRoleList
+  );
 }
