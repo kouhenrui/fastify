@@ -6,7 +6,7 @@ export const KEY = {
   secretKey: process.env.SECRET_KEY || "secret-key",
   apiVersion: process.env.API_VERSION || "v1",
   language: process.env.LANGUAGE || "zh-CN",
-  expiresIn: parseInt(process.env.EXPIRES_IN || "24*60*60*1000"),
+  expiresIn: parseInt(process.env.EXPIRES_IN || "86400000"), // 24小时 = 24*60*60*1000毫秒
   // MongoDB 配置
   mongodbUri:
     process.env.MONGODB_URI ||

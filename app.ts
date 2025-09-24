@@ -6,6 +6,7 @@ import registerPlugins from "./src/plugins/index";
 import { setDefaultLanguage } from "./src/utils/i18n";
 import { registerMiddleware } from "./src/middleware";
 import { initializeORMManager } from "./src/config/casbin/ormManager";
+import redisService from "./src/utils/redis";
 import router from "./src/route/router";
 // 加载环境变量
 dotenv.config();
@@ -34,6 +35,10 @@ export async function createApp(): Promise<FastifyInstance> {
 
     // 初始化 ORMManager
     await initializeORMManager();
+
+    // 初始化 Redis
+    await redisService.initializeRedis();
+    logger.info("✅ Redis 初始化完成");
 
     // 注册路由
     router(fastify);

@@ -1,5 +1,6 @@
-import Redis, { RedisOptions } from "ioredis";
+import Redis from "ioredis";
 import { KEY } from "../../config/key";
+import logger from "../../config/logger/logger";
 
 interface RedisConfig {
   host: string;
@@ -12,32 +13,43 @@ interface RedisConfig {
 class RedisService {
   private redis: Redis;
   private isConnected: boolean = false;
+  private finalConfig;
 
   constructor() {
-    this.initializeRedis();
-  }
-
-  private initializeRedis(): void {
     const config: RedisConfig = {
       host: KEY.redisHost,
       port: KEY.redisPort,
-      db: KEY.redisDb,
-      ...(KEY.redisPassword && { password: KEY.redisPassword }),
-      ...(KEY.redisUsername && { username: KEY.redisUsername })
+      db: KEY.redisDb
     };
-
-    const options: RedisOptions = {
+    if (KEY.redisPassword) {
+      config.password = KEY.redisPassword;
+    }
+    this.finalConfig = {
       ...config,
       maxRetriesPerRequest: 3,
-      lazyConnect: true,
+      lazyConnect: true, // 改为true，避免阻塞启动
       keepAlive: 30000,
       connectTimeout: 10000,
       commandTimeout: 5000,
-      enableReadyCheck: true
+      enableReadyCheck: true,
+      retryStrategy: (times: number) => {
+        const delay = Math.min(times * 100, 3000);
+        logger.warn({
+          event: "redisReconnecting",
+          message: `Redis重连第${times}次，延迟${delay}ms`
+        });
+        return delay;
+      },
+      reconnectOnError: (err: any) => {
+        const targetErrors = ["READONLY", "ECONNREFUSED", "ETIMEDOUT"];
+        return targetErrors.some(error => err.message.includes(error));
+      }
     };
-
-    this.redis = new Redis(options);
+  }
+  async initializeRedis(): Promise<void> {
+    this.redis = new Redis(this.finalConfig);
     this.setupEventListeners();
+    await this.redis.connect();
   }
 
   private setupEventListeners(): void {
@@ -67,10 +79,16 @@ class RedisService {
    */
   async checkConnection(): Promise<boolean> {
     try {
-      if (!this.isConnected) return false;
+      if (!this.isConnected) {
+        // 尝试连接
+        await this.redis.connect();
+        return false; // 连接是异步的，返回false让下次检查
+      }
+
       const result = await this.redis.ping();
       return result === "PONG";
-    } catch {
+    } catch (error: any) {
+      logger.error("❌ Redis 连接检查失败:", error.message);
       this.isConnected = false;
       return false;
     }
@@ -91,7 +109,6 @@ class RedisService {
    * 设置键值
    */
   async set(key: string, value: any, ttl?: number): Promise<string> {
-    await this.ensureConnection();
     const serialized = JSON.stringify(value);
     return ttl
       ? await this.redis.setex(key, ttl, serialized)
@@ -102,7 +119,6 @@ class RedisService {
    * 获取键值
    */
   async get(key: string): Promise<any> {
-    await this.ensureConnection();
     const value = await this.redis.get(key);
     return value ? JSON.parse(value) : null;
   }
@@ -111,7 +127,6 @@ class RedisService {
    * 删除键
    */
   async del(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.del(key);
   }
 
@@ -119,7 +134,6 @@ class RedisService {
    * 检查键是否存在
    */
   async exists(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.exists(key);
   }
 
@@ -127,7 +141,6 @@ class RedisService {
    * 设置过期时间
    */
   async expire(key: string, ttl: number): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.expire(key, ttl);
   }
 
@@ -135,47 +148,39 @@ class RedisService {
    * 获取剩余过期时间
    */
   async ttl(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.ttl(key);
   }
 
   // ==================== 数值操作 ====================
 
   async incr(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.incr(key);
   }
 
   async incrby(key: string, increment: number): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.incrby(key, increment);
   }
 
   async decr(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.decr(key);
   }
 
   async decrby(key: string, decrement: number): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.decrby(key, decrement);
   }
 
   // ==================== 哈希操作 ====================
 
   async hset(key: string, field: string, value: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.hset(key, field, JSON.stringify(value));
   }
 
   async hget(key: string, field: string): Promise<any> {
-    await this.ensureConnection();
     const value = await this.redis.hget(key, field);
     return value ? JSON.parse(value) : null;
   }
 
   async hgetall(key: string): Promise<Record<string, any>> {
-    await this.ensureConnection();
     const hash = await this.redis.hgetall(key);
     const result: Record<string, any> = {};
     for (const [field, value] of Object.entries(hash)) {
@@ -185,51 +190,42 @@ class RedisService {
   }
 
   async hdel(key: string, field: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.hdel(key, field);
   }
 
   async hexists(key: string, field: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.hexists(key, field);
   }
 
   async hlen(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.hlen(key);
   }
 
   // ==================== 列表操作 ====================
 
   async lpush(key: string, value: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.lpush(key, JSON.stringify(value));
   }
 
   async rpush(key: string, value: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.rpush(key, JSON.stringify(value));
   }
 
   async lpop(key: string): Promise<any> {
-    await this.ensureConnection();
     const value = await this.redis.lpop(key);
     return value ? JSON.parse(value) : null;
   }
 
   async rpop(key: string): Promise<any> {
-    await this.ensureConnection();
     const value = await this.redis.rpop(key);
     return value ? JSON.parse(value) : null;
   }
 
   async llen(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.llen(key);
   }
 
   async lrange(key: string, start: number, stop: number): Promise<any[]> {
-    await this.ensureConnection();
     const values = await this.redis.lrange(key, start, stop);
     return values.map(value => JSON.parse(value));
   }
@@ -237,79 +233,65 @@ class RedisService {
   // ==================== 集合操作 ====================
 
   async sadd(key: string, member: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.sadd(key, JSON.stringify(member));
   }
 
   async srem(key: string, member: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.srem(key, JSON.stringify(member));
   }
 
   async sismember(key: string, member: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.sismember(key, JSON.stringify(member));
   }
 
   async smembers(key: string): Promise<any[]> {
-    await this.ensureConnection();
     const members = await this.redis.smembers(key);
     return members.map(member => JSON.parse(member));
   }
 
   async scard(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.scard(key);
   }
 
   // ==================== 有序集合操作 ====================
 
   async zadd(key: string, score: number, member: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.zadd(key, score, JSON.stringify(member));
   }
 
   async zrem(key: string, member: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.zrem(key, JSON.stringify(member));
   }
 
   async zscore(key: string, member: any): Promise<string | null> {
-    await this.ensureConnection();
     return await this.redis.zscore(key, JSON.stringify(member));
   }
 
   async zrank(key: string, member: any): Promise<number | null> {
-    await this.ensureConnection();
     return await this.redis.zrank(key, JSON.stringify(member));
   }
 
   async zrevrank(key: string, member: any): Promise<number | null> {
-    await this.ensureConnection();
     return await this.redis.zrevrank(key, JSON.stringify(member));
   }
 
   async zrange(key: string, start: number, stop: number): Promise<any[]> {
-    await this.ensureConnection();
     const members = await this.redis.zrange(key, start, stop);
     return members.map(member => JSON.parse(member));
   }
 
   async zrevrange(key: string, start: number, stop: number): Promise<any[]> {
-    await this.ensureConnection();
     const members = await this.redis.zrevrange(key, start, stop);
     return members.map(member => JSON.parse(member));
   }
 
   async zcard(key: string): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.zcard(key);
   }
 
   // ==================== 发布订阅 ====================
 
   async publish(channel: string, message: any): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.publish(channel, JSON.stringify(message));
   }
 
@@ -317,7 +299,6 @@ class RedisService {
     channel: string,
     callback: (message: any) => void
   ): Promise<Redis> {
-    await this.ensureConnection();
     const subscriber = this.redis.duplicate();
     await subscriber.subscribe(channel);
 
@@ -336,7 +317,6 @@ class RedisService {
     keyValuePairs: Record<string, any>,
     ttl?: number
   ): Promise<string> {
-    await this.ensureConnection();
     const serializedPairs: string[] = [];
     for (const [key, value] of Object.entries(keyValuePairs)) {
       serializedPairs.push(key, JSON.stringify(value));
@@ -356,25 +336,21 @@ class RedisService {
   }
 
   async mget(keys: string[]): Promise<any[]> {
-    await this.ensureConnection();
     const values = await this.redis.mget(...keys);
     return values.map(value => (value ? JSON.parse(value) : null));
   }
 
   async mdel(keys: string[]): Promise<number> {
-    await this.ensureConnection();
     return await this.redis.del(...keys);
   }
 
   // ==================== 工具方法 ====================
 
   async keys(pattern: string): Promise<string[]> {
-    await this.ensureConnection();
     return await this.redis.keys(pattern);
   }
 
   async info(): Promise<Record<string, string>> {
-    await this.ensureConnection();
     const info = await this.redis.info();
     const lines = info.split("\r\n");
     const result: Record<string, string> = {};
@@ -392,12 +368,10 @@ class RedisService {
   }
 
   async flushdb(): Promise<string> {
-    await this.ensureConnection();
     return await this.redis.flushdb();
   }
 
   async flushall(): Promise<string> {
-    await this.ensureConnection();
     return await this.redis.flushall();
   }
 

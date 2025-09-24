@@ -25,8 +25,8 @@ const sign = (payload: TokenPayload): signRes => {
   };
   const token = jwt.sign(payload, KEY.secretKey, options);
 
-  // 计算过期时间
-  const expiresInSec = Math.floor(Date.now() / 1000) + KEY.expiresIn;
+  // 计算过期时间（KEY.expiresIn是毫秒，需要转换为秒）
+  const expiresInSec = Math.floor(Date.now() / 1000) + Math.floor(KEY.expiresIn / 1000);
 
   return {
     token,
