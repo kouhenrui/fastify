@@ -11,8 +11,6 @@ import { ErrorFactory } from "../utils/errors/custom-errors";
 import { KEY } from "../config/key";
 import Redis from "ioredis";
 import rateLimit from "@fastify/rate-limit";
-// import prismaPlugin from "./dataBase/prisma";
-// import typeormPlugin from "./dataBase/typeorm";
 import mongoosePlugin from "./dataBase/mongoose";
 import t from "../utils/i18n";
 // 插件注册函数
@@ -20,9 +18,7 @@ async function registerPlugins(fastify: FastifyInstance) {
   // 第一步：强制注册日志和响应格式化插件，失败则启动失败
   try {
     // 注册日志插件
-    await fastify.register(loggerPlugin, {
-      logLevel: KEY.logLevel as "info" | "error" | "warn" | "debug"
-    });
+    await fastify.register(loggerPlugin);
 
     // 注册响应格式化插件
     await fastify.register(responsePlugin, { enableRequestId: true });
@@ -107,14 +103,6 @@ async function registerPlugins(fastify: FastifyInstance) {
       },
       transformSpecificationClone: true
     });
-    // 创建用于限流的 Redis 实例
-    // const rateLimitRedis = new Redis({
-    //   host: KEY.redisHost,
-    //   port: KEY.redisPort,
-    //   db: KEY.redisDb,
-    //   ...(KEY.redisPassword && { password: KEY.redisPassword }),
-    //   ...(KEY.redisUsername && { username: KEY.redisUsername })
-    // });
 
     // 注册限流插件
     await fastify.register(rateLimit, {
@@ -151,7 +139,7 @@ async function registerPlugins(fastify: FastifyInstance) {
       }
     });
 
-    // 注册 Helmet 插件
+    // 注册 Helmet 插件 熔断
     // await fastify.register(helmet, {
     //   contentSecurityPolicy: false
     // });
@@ -165,7 +153,7 @@ async function registerPlugins(fastify: FastifyInstance) {
     logger.error("插件注册失败", {
       error: error.message
     });
-    throw ErrorFactory.configuration("插件注册失败");
+    throw ErrorFactory.configuration(t("plugin_register_failed"), error.message);
   }
 }
 
