@@ -26,7 +26,8 @@ const sign = (payload: TokenPayload): signRes => {
   const token = jwt.sign(payload, KEY.secretKey, options);
 
   // 计算过期时间（KEY.expiresIn是毫秒，需要转换为秒）
-  const expiresInSec = Math.floor(Date.now() / 1000) + Math.floor(KEY.expiresIn / 1000);
+  const expiresInSec =
+    Math.floor(Date.now() / 1000) + Math.floor(KEY.expiresIn / 1000);
 
   return {
     token,
@@ -40,7 +41,13 @@ const sign = (payload: TokenPayload): signRes => {
  * @returns
  */
 const verify = (token: string): TokenPayload => {
-  const res = jwt.verify(token, KEY.secretKey);
+  const options: jwt.VerifyOptions = {
+    audience: KEY.serverName,
+    issuer: KEY.serverName,
+    subject: KEY.serverName
+  };
+
+  const res = jwt.verify(token, KEY.secretKey, options);
   if (typeof res === "string" || res === null)
     throw ErrorFactory.crypto("verify Invalid token");
   return res as TokenPayload;

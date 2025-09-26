@@ -60,14 +60,11 @@ export function decrypt(encryptedData: string, password?: string): string {
     const key = password || KEY.secretKey;
     const parts = encryptedData.split(":");
 
-    if (parts.length !== 4) {
-      throw new Error("无效的加密数据格式");
-    }
+    if (parts.length !== 4) throw ErrorFactory.crypto("无效的加密数据格式");
 
     const [saltHex, ivHex, tagHex, encrypted] = parts;
-    if (!saltHex || !ivHex || !tagHex || !encrypted) {
-      throw new Error("无效的加密数据格式");
-    }
+    if (!saltHex || !ivHex || !tagHex || encrypted === undefined)
+      throw ErrorFactory.crypto("无效的加密数据格式");
     const salt = Buffer.from(saltHex, "hex");
     const iv = Buffer.from(ivHex, "hex");
     const tag = Buffer.from(tagHex, "hex");
@@ -125,11 +122,15 @@ export function verifyHmac(
   secret: string,
   algorithm: string = "sha256"
 ): boolean {
-  const expectedSignature = hmac(data, secret, algorithm);
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, "hex"),
-    Buffer.from(expectedSignature, "hex")
-  );
+  try {
+    const expectedSignature = hmac(data, secret, algorithm);
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, "hex"),
+      Buffer.from(expectedSignature, "hex")
+    );
+  } catch (_error) {
+    return false;
+  }
 }
 
 /**
@@ -201,7 +202,11 @@ export function aesGcmEncrypt(text: string, password: string): string {
     let encrypted = cipher.update(text, "utf8", "hex");
     encrypted += cipher.final("hex");
 
-    return encrypted;
+    // 获取认证标签
+    const authTag = cipher.getAuthTag();
+
+    // 返回格式: iv:authTag:encrypted
+    return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
   } catch (error: any) {
     throw ErrorFactory.crypto(`AES-GCM加密失败: ${error.message}`);
   }
@@ -216,10 +221,24 @@ export function aesGcmEncrypt(text: string, password: string): string {
 export function aesGcmDecrypt(encryptedData: string, password: string): string {
   try {
     const key = crypto.createHash("sha256").update(password).digest();
-    const iv = crypto.randomBytes(12); // GCM 推荐 12 字节 IV
-    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
 
-    let decrypted = decipher.update(encryptedData, "hex", "utf8");
+    // 解析加密数据: iv:authTag:encrypted
+    const parts = encryptedData.split(":");
+    if (parts.length !== 3) {
+      throw ErrorFactory.crypto("无效的加密数据格式");
+    }
+
+    const [ivHex, authTagHex, encrypted] = parts;
+    if (!ivHex || !authTagHex || encrypted === undefined) {
+      throw ErrorFactory.crypto("无效的加密数据格式");
+    }
+    const iv = Buffer.from(ivHex, "hex");
+    const authTag = Buffer.from(authTagHex, "hex");
+
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(encrypted, "hex", "utf8") as string;
     decrypted += decipher.final("utf8");
 
     return decrypted;
