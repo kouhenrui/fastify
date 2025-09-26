@@ -21,10 +21,6 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   try {
-    // 初始化 i18n 翻译系统
-    setDefaultLanguage();
-    logger.info("✅ i18n 翻译系统初始化完成");
-
     // 注册插件（日志系统必须成功）
     await registerPlugins(fastify);
     logger.info("✅ 插件注册完成");
@@ -32,7 +28,9 @@ export async function createApp(): Promise<FastifyInstance> {
     // 注册中间件
     await registerMiddleware(fastify);
     logger.info("✅ 中间件注册完成");
-
+    // 初始化 i18n 翻译系统
+    setDefaultLanguage();
+    logger.info("✅ i18n 翻译系统初始化完成");
     // 初始化 ORMManager
     await initializeORMManager();
 

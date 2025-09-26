@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { ErrorFactory } from "../errors/custom-errors";
 import { KEY } from "../../config/key";
+import { FastifyRequest } from "fastify";
 
 // 语言类型定义
 export type Language = "zh-CN" | "en-US" | "ja-JP";
@@ -183,6 +184,76 @@ export function reloadTranslations(language?: Language): void {
         // 忽略单个语言加载失败
       }
     });
+  }
+}
+
+/**
+ * 处理请求语言检测
+ * @param request Fastify请求对象
+ * @returns 检测到的语言代码
+ */
+export function handleRequestLanguage(request: FastifyRequest): Language {
+  const acceptLanguage = request.headers["accept-language"];
+
+  if (!acceptLanguage) {
+    return DEFAULT_LANGUAGE;
+  }
+
+  // 处理数组类型的header值
+  const langValue = Array.isArray(acceptLanguage)
+    ? acceptLanguage[0]
+    : acceptLanguage;
+
+  if (!langValue) {
+    return DEFAULT_LANGUAGE;
+  }
+
+  // 解析 Accept-Language 头，支持优先级和权重
+  // 例如: "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+  try {
+    const languages = langValue
+      .split(",")
+      .map((lang: string) => {
+        const [locale, qValue] = lang.trim().split(";q=");
+        return {
+          locale: (locale || "").trim(),
+          quality: qValue ? parseFloat(qValue) : 1.0
+        };
+      })
+      .sort((a: any, b: any) => b.quality - a.quality); // 按质量排序
+
+    // 查找完全匹配的语言
+    const exactMatch = languages.find((lang: any) =>
+      SUPPORTED_LANGUAGES.includes(lang.locale as Language)
+    );
+
+    if (exactMatch) {
+      return exactMatch.locale as Language;
+    }
+
+    // 尝试匹配语言代码（如 zh, en, ja）
+    const shortMatch = languages.find((lang: any) => {
+      const shortCode = lang.locale.split("-")[0];
+      return SUPPORTED_LANGUAGES.some(supported =>
+        supported.startsWith(shortCode)
+      );
+    });
+
+    if (shortMatch) {
+      const shortCode = shortMatch.locale.split("-")[0];
+      const matchedLang = SUPPORTED_LANGUAGES.find(supported =>
+        supported.startsWith(shortCode)
+      );
+      if (matchedLang) {
+        return matchedLang;
+      }
+    }
+
+    // 默认返回配置的语言
+    return (KEY.language as Language) || DEFAULT_LANGUAGE;
+  } catch (_error) {
+    // 解析失败时返回默认语言
+    return (KEY.language as Language) || DEFAULT_LANGUAGE;
   }
 }
 

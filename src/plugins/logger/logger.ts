@@ -73,11 +73,10 @@ declare module "fastify" {
     Headers?: Record<string, any>;
     Cookies?: Record<string, any>;
     lang?: Language;
-    user?: {
+    user: {
       id: string;
       username: string;
-      email?: string;
-      roles?: string[];
+      roles: string[];
       [key: string]: any;
     };
     requestId?: string;

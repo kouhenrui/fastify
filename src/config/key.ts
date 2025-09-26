@@ -7,6 +7,7 @@ export const KEY = {
   apiVersion: process.env.API_VERSION || "v1",
   language: process.env.LANGUAGE || "zh-CN",
   expiresIn: parseInt(process.env.EXPIRES_IN || "86400000"), // 24小时 = 24*60*60*1000毫秒
+  publicRoutes: process.env.PUBLIC_ROUTES || "/v1/auth/login,/v1/auth/register,/health,/docs",
   // MongoDB 配置
   mongodbUri:
     process.env.MONGODB_URI ||
