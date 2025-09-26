@@ -269,10 +269,6 @@ declare module "fastify" {
     pagination: typeof PaginationHelper;
   }
 
-  interface FastifyRequest {
-    requestId?: string;
-  }
-
   interface FastifyReply {
     success<T>(data: T, message?: string, code?: number): void;
     created<T>(data: T, message?: string): void;

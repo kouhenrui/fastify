@@ -68,4 +68,11 @@ export default async function authRoutes(auth: FastifyInstance) {
     },
     authController.getRoleList
   );
+  auth.get('/reset/password', {
+    schema: {
+      tags: ["认证"],
+      summary: "重置密码",
+      description: "重置密码"
+    }
+  }, authController.resetPassword);
 }

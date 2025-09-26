@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { logger } from "../../config/logger/logger.js";
 import fp from "fastify-plugin";
+import { Language } from "../../utils/i18n/index.js";
 // 日志插件选项
 interface LoggerOptions {
   enableErrorLogging?: boolean;
@@ -58,7 +59,7 @@ const loggerPlugin: FastifyPluginAsync<LoggerOptions> = async (
   });
 };
 
-// 类型声明
+// 类型声明 扩展请求类型，添加用户信息
 declare module "fastify" {
   interface FastifyInstance {
     logger: typeof logger;
@@ -71,6 +72,21 @@ declare module "fastify" {
     Query?: Record<string, any>;
     Headers?: Record<string, any>;
     Cookies?: Record<string, any>;
+    lang?: Language;
+    user?: {
+      id: string;
+      username: string;
+      email?: string;
+      roles?: string[];
+      [key: string]: any;
+    };
+    requestId?: string;
+  }
+
+  interface FastifyReply {
+    success<T>(data: T, message?: string, code?: number): void;
+    created<T>(data: T, message?: string): void;
+    noContent(message?: string): void;
   }
 }
 

@@ -9,11 +9,12 @@ import logger from "../config/logger/logger";
 import { getCorsConfigByEnv } from "../utils/cors/cors";
 import { ErrorFactory } from "../utils/errors/custom-errors";
 import { KEY } from "../config/key";
-// import Redis from "ioredis";
-// import rateLimit from "@fastify/rate-limit";
+import Redis from "ioredis";
+import rateLimit from "@fastify/rate-limit";
 // import prismaPlugin from "./dataBase/prisma";
 // import typeormPlugin from "./dataBase/typeorm";
 import mongoosePlugin from "./dataBase/mongoose";
+import t from "../utils/i18n";
 // 插件注册函数
 async function registerPlugins(fastify: FastifyInstance) {
   // 第一步：强制注册日志和响应格式化插件，失败则启动失败
@@ -115,20 +116,40 @@ async function registerPlugins(fastify: FastifyInstance) {
     //   ...(KEY.redisUsername && { username: KEY.redisUsername })
     // });
 
-    // // 注册限流插件
-    // await fastify.register(rateLimit, {
-    //   redis: rateLimitRedis,
-    //   max: 100, // 每分钟最多 100 个请求
-    //   timeWindow: "1 minute",
-    //   errorResponseBuilder(request, context) {
-    //     return {
-    //       code: 429,
-    //       error: "Too Many Requests",
-    //       message: `Rate limit exceeded, retry in ${Math.round(Number(context.after) / 1000)} seconds`,
-    //       retryAfter: Math.round(Number(context.after) / 1000)
-    //     };
-    //   }
-    // });
+    // 注册限流插件
+    await fastify.register(rateLimit, {
+      redis: new Redis({
+        host: KEY.redisHost,
+        port: KEY.redisPort,
+        db: KEY.redisDb,
+        ...(KEY.redisPassword && { password: KEY.redisPassword })
+      }),
+      global: true, // default true
+      max: 3, // default 1000
+      ban: 2, // default -1
+      timeWindow: 5000, // default 1000 * 60
+      hook: "onRequest", // 在认证之前执行
+      cache: 10000, // default 5000
+      // allowList: ["127.0.0.1"], // default []
+      errorResponseBuilder: (request, _context) => {
+        const code = `Rate limit exceeded, retry in ${60} seconds`;
+        throw ErrorFactory.rateLimit(
+          t("rate_limit_exceeded", undefined, request.lang),
+          code
+        );
+      },
+      addHeadersOnExceeding: {
+        "x-ratelimit-limit": true,
+        "x-ratelimit-remaining": true,
+        "x-ratelimit-reset": true
+      },
+      addHeaders: {
+        "x-ratelimit-limit": true,
+        "x-ratelimit-remaining": true,
+        "x-ratelimit-reset": true,
+        "retry-after": true
+      }
+    });
 
     // 注册 Helmet 插件
     // await fastify.register(helmet, {
@@ -139,13 +160,6 @@ async function registerPlugins(fastify: FastifyInstance) {
     await fastify.register(mongoosePlugin, {
       uri: KEY.mongodbUri
     });
-
-    // 注册 TypeORM 插件
-    // await fastify.register(typeormPlugin,{autoInitialize: true});
-
-    // 注册 Prisma的pg 插件
-    // await fastify.register(prismaPlugin, {autoInitialize: true});
-
   } catch (error: any) {
     // 使用已注册的日志系统记录错误
     logger.error("插件注册失败", {
