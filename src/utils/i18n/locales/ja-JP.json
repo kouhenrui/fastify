@@ -58,6 +58,23 @@
       "required": "ログインが必要です",
       "expired": "ログインが期限切れです",
       "invalid_token": "無効なアクセストークンです"
+    },
+    "wechat": {
+      "login": {
+        "success": "WeChatログイン成功",
+        "failed": "WeChatログイン失敗",
+        "invalid_code": "WeChat認証コードが無効です",
+        "phone_authorization_failed": "電話番号認証に失敗しました"
+      }
+    },
+    "merchant": {
+      "login": {
+        "success": "事業者ログイン成功",
+        "failed": "事業者ログイン失敗",
+        "account_not_found": "事業者アカウントが見つかりません",
+        "invalid_credentials": "電話番号またはパスワードが間違っています",
+        "account_disabled": "事業者アカウントが無効になっています"
+      }
     }
   },
   "user": {

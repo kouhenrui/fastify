@@ -58,6 +58,23 @@
       "required": "Login required",
       "expired": "Login expired",
       "invalid_token": "Invalid access token"
+    },
+    "wechat": {
+      "login": {
+        "success": "WeChat login successful",
+        "failed": "WeChat login failed",
+        "invalid_code": "Invalid WeChat authorization code",
+        "phone_authorization_failed": "Phone number authorization failed"
+      }
+    },
+    "merchant": {
+      "login": {
+        "success": "Merchant login successful",
+        "failed": "Merchant login failed",
+        "account_not_found": "Merchant account not found",
+        "invalid_credentials": "Invalid phone number or password",
+        "account_disabled": "Merchant account is disabled"
+      }
     }
   },
   "user": {

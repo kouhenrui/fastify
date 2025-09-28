@@ -59,6 +59,23 @@
       "required": "需要登录",
       "expired": "登录已过期",
       "invalid_token": "无效的访问令牌"
+    },
+    "wechat": {
+      "login": {
+        "success": "微信登录成功",
+        "failed": "微信登录失败",
+        "invalid_code": "微信授权码无效",
+        "phone_authorization_failed": "手机号授权失败"
+      }
+    },
+    "merchant": {
+      "login": {
+        "success": "商家登录成功",
+        "failed": "商家登录失败",
+        "account_not_found": "商家账户不存在",
+        "invalid_credentials": "手机号或密码错误",
+        "account_disabled": "商家账户已被禁用"
+      }
     }
   },
   "user": {
@@ -73,7 +90,22 @@
       "roles": "角色",
       "last_login": "最后登录时间",
       "created_at": "创建时间",
-      "updated_at": "更新时间"
+      "updated_at": "更新时间",
+      "get": {
+        "success": "获取用户信息成功"
+      },
+      "update": {
+        "success": "更新用户信息成功"
+      },
+      "verify": {
+        "success": "用户身份验证成功"
+      },
+      "verified_list": {
+        "success": "获取已验证用户列表成功"
+      },
+      "delete": {
+        "success": "删除用户信息成功"
+      }
     },
     "management": {
       "title": "用户管理",

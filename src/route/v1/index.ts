@@ -1,9 +1,11 @@
 import { FastifyInstance } from "fastify";
 import authRoutes from "../auth";
+import userProfileRoutes from "../userProfile";
 import { KEY } from "../../config/key";
 
 const v1Routes = async (fastify: FastifyInstance) => {
   await fastify.register(authRoutes, { prefix: "auth" });
+  await fastify.register(userProfileRoutes, { prefix: "user-profile" });
   fastify.get(
     "",
     {

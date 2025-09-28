@@ -98,3 +98,10 @@ export enum BusinessCode {
   EXTERNAL_SERVICE_ERROR = 2002,
   UNKNOWN_ERROR = 9999
 }
+
+export interface User {
+  id: string;
+  username: string;
+  roles: string[];
+  [key: string]: any;
+}

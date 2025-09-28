@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import { logger } from "../../config/logger/logger.js";
 import fp from "fastify-plugin";
 import { Language } from "../../utils/i18n/index.js";
+import { User } from "../../utils/types/response.js";
 // 日志插件选项
 interface LoggerOptions {
   enableErrorLogging?: boolean;
@@ -73,12 +74,7 @@ declare module "fastify" {
     Headers?: Record<string, any>;
     Cookies?: Record<string, any>;
     lang?: Language;
-    user: {
-      id: string;
-      username: string;
-      roles: string[];
-      [key: string]: any;
-    };
+    user: User;
     requestId?: string;
   }
 

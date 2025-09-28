@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { LoginRequestBody, RegisterRequestBody } from "../utils/do/auth";
+import { LoginRequestBody, MerchantLoginRequestBody, RegisterRequestBody, WechatLoginRequestBody } from "../utils/do/auth";
 import authService from "../service/auth.service";
+import wechatService from "../service/wechat.service";
 import { ErrorFactory } from "../utils/errors/custom-errors";
 import { t } from "../utils/i18n";
 
@@ -93,6 +94,56 @@ class AuthController {
       result,
       t("auth.reset_password.success", undefined, request.lang)
     );
+  };
+
+  /**
+   * 微信登录
+   */
+  wechatLogin = async (
+    request: FastifyRequest<{ Body: WechatLoginRequestBody }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const body = request.body;
+      const result = await wechatService.wechatLogin(
+        body.code,
+        body.encryptedData,
+        body.iv
+      );
+      return reply.success(
+        result,
+        t("auth.wechat.login.success", undefined, request.lang)
+      );
+    } catch (error: any) {
+      throw ErrorFactory.business(
+        t(error.message, undefined, request.lang) || error.message,
+        error.code,
+        error.details
+      );
+    }
+  };
+
+  /**
+   * 商家登录
+   */
+  merchantLogin = async (
+    request: FastifyRequest<{ Body: MerchantLoginRequestBody }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const body = request.body;
+      const result = await wechatService.merchantLogin(body.phone, body.password);
+      return reply.success(
+        result,
+        t("auth.merchant.login.success", undefined, request.lang)
+      );
+    } catch (error: any) {
+      throw ErrorFactory.business(
+        t(error.message, undefined, request.lang) || error.message,
+        error.code,
+        error.details
+      );
+    }
   };
 }
 

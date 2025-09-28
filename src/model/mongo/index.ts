@@ -5,6 +5,12 @@
 import { Document, Schema } from "mongoose";
 import Role from "./role";
 import Account from "./account";
+import UserProfile from "./accountProfile";
+import Service from "./service";
+import Order from "./order";
+import Merchant from "./merchant";
+import OrderHistory from "./orderHistory";
+import Payment from "./payment";
 import ABAC_INIT_DATA from "../../config/casbin/abac-data";
 import logger from "../../utils/logger/logger";
 import Resource from "./resource";

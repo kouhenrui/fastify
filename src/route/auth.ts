@@ -2,14 +2,17 @@ import { FastifyInstance } from "fastify";
 import {
   authResponseSchema,
   loginRequestSchema,
+  merchantLoginRequestSchema,
   registerRequestSchema,
   userListQuerySchema,
-  userListResponseSchema
+  userListResponseSchema,
+  wechatLoginRequestSchema,
+  wechatLoginResponseSchema
 } from "../schemas";
 import authController from "../controller/auth.controller";
 
 export default async function authRoutes(auth: FastifyInstance) {
-  // 用户登录
+  // 登录
   auth.post(
     "/login",
     {
@@ -75,4 +78,38 @@ export default async function authRoutes(auth: FastifyInstance) {
       description: "重置密码"
     }
   }, authController.resetPassword);
+
+  // 微信登录
+  auth.post(
+    "/wechat/login",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "微信登录",
+        description: "通过微信授权码进行登录，支持手机号授权",
+        body: wechatLoginRequestSchema,
+        response: {
+          200: wechatLoginResponseSchema
+        }
+      }
+    },
+    authController.wechatLogin
+  );
+
+  // 商家登录
+  auth.post(
+    "/merchant/login",
+    {
+      schema: {
+        tags: ["认证"],
+        summary: "商家登录",
+        description: "商家通过手机号和密码登录",
+        body: merchantLoginRequestSchema,
+        response: {
+          200: wechatLoginResponseSchema
+        }
+      }
+    },
+    authController.merchantLogin
+  );
 }

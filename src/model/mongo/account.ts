@@ -5,7 +5,8 @@ import { IBaseModel, createSchema } from ".";
 export interface IAccount extends IBaseModel {
   username: string; // 用户名
   accessToken?: string; // 访问令牌
-  email: string; // 邮箱
+  phone: string; // 手机号
+  email?: string; // 邮箱
   password: string; // 密码
   avatar?: string; // 头像
   department?: string; // 部门
@@ -13,6 +14,9 @@ export interface IAccount extends IBaseModel {
   location?: string; // 地理位置
   roles: string[]; // 角色数组
   lastLoginAt?: Date; // 最后登录时间
+
+  // 家政服务扩展字段
+  userType: "customer" | "merchant" | "admin"; // 用户类型：客户、商家、管理员
 
   validatePassword(password: string): Promise<boolean>;
   updateLastLogin(accessToken: string): Promise<IAccount>;
@@ -80,6 +84,14 @@ const accountSchema = createSchema<IAccount>(
     lastLoginAt: {
       type: Date,
       default: null
+    },
+
+    // 家政服务扩展字段
+    userType: {
+      type: String,
+      enum: ["customer", "merchant", "admin"],
+      default: "customer",
+      required: true
     }
   },
   "accounts"
@@ -155,6 +167,14 @@ accountSchema.statics.findByDepartment = function (department: string) {
   return this.find({ department, isActive: true, deletedAt: null });
 };
 
+accountSchema.statics.findByPhone = function (phone: string) {
+  return this.findOne({ phone, deletedAt: null });
+};
+
+accountSchema.statics.findByUserType = function (userType: string) {
+  return this.find({ userType, isActive: true, deletedAt: null });
+};
+
 // 中间件
 accountSchema.pre("save", async function (next) {
   // 确保邮箱是小写
@@ -177,6 +197,8 @@ interface IAccountModel extends Model<IAccount> {
   findByUsername(username: string): Promise<IAccount | null>;
   findByRole(roleCode: string): Promise<IAccount[]>;
   findByDepartment(department: string): Promise<IAccount[]>;
+  findByPhone(phone: string): Promise<IAccount | null>;
+  findByUserType(userType: string): Promise<IAccount[]>;
 }
 
 // 创建模型

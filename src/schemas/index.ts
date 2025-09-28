@@ -186,6 +186,86 @@ export const authResponseSchema = {
   required: ["code", "message", "data", "timestamp"]
 };
 
+// 微信登录请求 schema
+export const wechatLoginRequestSchema = {
+  type: "object",
+  properties: {
+    code: {
+      type: "string",
+      description: "微信授权码",
+      required: true
+    },
+    encryptedData: {
+      type: "string",
+      description: "加密数据",
+      required: false
+    },
+    iv: {
+      type: "string",
+      description: "初始向量",
+      required: false
+    },
+    phone: {
+      type: "string",
+      description: "手机号授权码",
+      required: true
+    }
+  },
+  required: ["phone", "code"]
+};
+
+// 商家登录请求 schema
+export const merchantLoginRequestSchema = {
+  type: "object",
+  properties: {
+    phone: {
+      type: "string",
+      pattern: "^1[3-9]\\d{9}$",
+      description: "手机号"
+    },
+    password: {
+      type: "string",
+      minLength: 6,
+      description: "密码"
+    }
+  },
+  required: ["phone", "password"]
+};
+
+// 微信登录响应 schema
+export const wechatLoginResponseSchema = {
+  type: "object",
+  properties: {
+    code: { type: "number" },
+    message: { type: "string" },
+    data: {
+      type: "object",
+      properties: {
+        token: {
+          type: "string",
+          description: "JWT 访问令牌"
+        },
+        expiresAt: {
+          type: "number",
+          description: "过期时间戳"
+        },
+        user: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            username: { type: "string" },
+            phone: { type: "string" },
+            userType: { type: "string" },
+            isVerified: { type: "boolean" }
+          }
+        }
+      }
+    },
+    timestamp: { type: "number" }
+  },
+  required: ["code", "message", "data", "timestamp"]
+};
+
 // 系统信息 schema
 export const systemInfoSchema = {
   type: "object",
